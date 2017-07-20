@@ -17,13 +17,17 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
-import java.net.URL; //import 클래스
+import java.net.URL;
+import java.util.ArrayList;  //import 클래스
 
 
 public class MainActivity extends AppCompatActivity {
-    View MyPage1,MyPage2,MyPage3;
-    EditText BusNum_Input;
-    String Service_Key="xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";
+    View MyPage1,MyPage2,MyPage3;       // frameLayout에 적용되지 view
+    EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
+    String Service_Key="xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";    //openApi 요청을 위한 servicekey
+    String Result_Xml="";                // 응답 결과 저장
+    NetworkTask networkTask;             // 비동기 처리
+    ArrayList<BusLine_Info> busline_info_list=new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,19 +68,28 @@ public class MainActivity extends AppCompatActivity {
                     String Bus_Id = BusNum_Input.getText().toString();   //사용자가 입력한 버스 번호를 저장
                     String Result_Url="";
                     String Bus_Num="";
-                    if(Bus_Id.equals("")){                                    //입력 내용이 공백인지 체크
+                    if(Bus_Id.equals("")){                                 //입력 내용이 공백인지 체크
                         Toast.makeText(getApplicationContext(),"버스 번호를 입력해주세요.",Toast.LENGTH_SHORT).show();
                     }
                     else{
                         Bus_Num= Get_BusId(Bus_Id);                        //공백이 아니라면 버스번호->id로 변환해주는 Get_BusId()메소드 호출
-                        Result_Url= Create_Url("busInfo",Bus_Num,Service_Key,1);
-                        NetworkTask networkTask = new NetworkTask(Result_Url,null);
+                        Result_Url= Create_Url("busInfoRoute",Bus_Num,Service_Key,1);
+
+                        networkTask = new NetworkTask(Result_Url,null);
                         networkTask.execute();
+
+                        while(Result_Xml.equals("")){}                  //AsyncTask 처리 결과를 대기합니다.
+
+                        My_Parser my_parser = new My_Parser(new Parser_Line(Result_Xml));
+
+                        try{
+                            my_parser.Parsing_Xml();
+                            busline_info_list=my_parser.Get_InfoList();
+                        }catch(Exception e){}
                     }
             }
         }
     };
-
     public class NetworkTask extends AsyncTask<String,String,String>
     {
         private String url;
@@ -92,13 +105,14 @@ public class MainActivity extends AppCompatActivity {
             String result="";
             UrlConnection urlconnection = new UrlConnection(this.url,values);
             result = urlconnection.Request_UrlConnect();
+            Result_Xml=result;
             return result;
         }
         protected void onPostExecute(String s)
         {
-            BusNum_Input.setText(s);
             super.onPostExecute(s);
         }
+
     }    //비동기 처리를 위한 AsyncTask 구현 //비동기 처리를 위한 AsyncTask 구현 부분
 
     public String Get_BusId(String bus_id)
@@ -134,5 +148,17 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return Request_Url;
-    }       // Create_Url() 함수 원형 부분 // 요청에 알맞는 Url 형성을 위한 메소드
-}
+    }  // Create_Url() 함수 원형 부분 // 요청에 알맞는 Url 형성을 위한 메소드
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        try
+        {
+            if(networkTask.getStatus()==AsyncTask.Status.RUNNING)
+            {
+                networkTask.cancel(true);
+            }
+        }catch(Exception e){}
+    }
+} //onDestroy() //AsyncTask 안전하게 종료하는 부분 구현
