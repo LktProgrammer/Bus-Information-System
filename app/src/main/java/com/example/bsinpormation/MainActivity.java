@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     String Result_Xml="";                // 응답 결과 저장
     NetworkTask networkTask;             // 비동기 처리
     ArrayList<BusLine_Info> busline_info_list=new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
+    String Test_url= "";                 //정류소 정보 파싱 테스트를 위한 임시 변수
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.button4:
                     MyPage2.setVisibility(View.VISIBLE);
+                    busline_info_list = null;;
+                    Result_Xml="";
                     String Bus_Id = BusNum_Input.getText().toString();   //사용자가 입력한 버스 번호를 저장
                     String Result_Url="";
                     String Bus_Num="";
@@ -84,7 +87,11 @@ public class MainActivity extends AppCompatActivity {
 
                         try{
                             my_parser.Parsing_Xml();
-                            busline_info_list=my_parser.Get_InfoList();
+                            busline_info_list=(ArrayList<BusLine_Info>)my_parser.Get_InfoList();
+                            Log.d("확인입니다",String.valueOf(busline_info_list.get(15).Get_Bus_Exist()));
+                            Log.d("확인입니다",busline_info_list.get(15).Get_BusStation_Name());
+                            Log.d("확인입니다",busline_info_list.get(15).Get_BusStation_Num());
+                            Log.d("확인입니다",busline_info_list.get(15).Get_Node_Id());
                         }catch(Exception e){}
                     }
             }
@@ -125,8 +132,12 @@ public class MainActivity extends AppCompatActivity {
         else{
             bus_num = bus_id;
         }
-        if(bus_num.length()==1){            //버스 번호가 1자리 일때와 아닐때 생성규칙을 구분하여 구현
-            bus_num = "52000" + bus_num + "0000";
+        if(bus_num.length()==1 ||bus_num.length()==2 ){            //버스 번호가 1자리 일때와 아닐때 생성규칙을 구분하여 구현
+            bus_num = "52000" + bus_num ;
+            while(bus_num.length()!=10)
+            {
+                bus_num+="0";
+            }
         }
         else{
             bus_num = "5200" + bus_num;

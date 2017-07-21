@@ -13,5 +13,5 @@ import java.util.ArrayList;
 public interface Parser_Inter {
 
     public void Parsing_Xml() throws XmlPullParserException;
-    public ArrayList<BusLine_Info> Get_InfoList();
+    public ArrayList<?> Get_InfoList();
 }

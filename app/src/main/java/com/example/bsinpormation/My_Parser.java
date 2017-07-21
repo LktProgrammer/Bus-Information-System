@@ -20,8 +20,8 @@ public class My_Parser {
     {
         parser_inter.Parsing_Xml();
     }
-    public ArrayList<BusLine_Info> Get_InfoList()
+    public ArrayList<?> Get_InfoList()
     {
-        return parser_inter.Get_InfoList();
+            return parser_inter.Get_InfoList();
     }
 }

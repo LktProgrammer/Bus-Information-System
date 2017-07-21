@@ -5,10 +5,12 @@ package com.example.bsinpormation;
  */
 
 public class BusLine_Info {
-    private String Node_Id;
-    private String BusStation_Name;
+    private String Node_Id;             //노선ID
+    private String BusStation_Name;    //정류소이름
     private boolean Bus_Exist;
     private String BusStation_Num;
+    ///////////////////////////////
+
 
     public BusLine_Info()
     {
