@@ -28,7 +28,8 @@ public class MainActivity extends AppCompatActivity {
     String Result_Xml="";                // 응답 결과 저장
     NetworkTask networkTask;             // 비동기 처리
     ArrayList<BusLine_Info> busline_info_list=new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
-    String Test_url= "";                 //정류소 정보 파싱 테스트를 위한 임시 변수
+    ArrayList<BusStation_Info> busstation_info_list=new ArrayList<BusStation_Info>();
+    String Test_url= "http://data.busan.go.kr/openBus/service/busanBIMS2/stopArr?bstopid=172080301&serviceKey=xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";                 //정류소 정보 파싱 테스트를 위한 임시 변수
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,15 +84,18 @@ public class MainActivity extends AppCompatActivity {
 
                         while(Result_Xml.equals("")){}                  //AsyncTask 처리 결과를 대기합니다.
 
-                        My_Parser my_parser = new My_Parser(new Parser_Line(Result_Xml));
+                        My_Parser my_parser = new My_Parser(new Parser_BusStation(Test_url));
 
                         try{
                             my_parser.Parsing_Xml();
-                            busline_info_list=(ArrayList<BusLine_Info>)my_parser.Get_InfoList();
-                            Log.d("확인입니다",String.valueOf(busline_info_list.get(15).Get_Bus_Exist()));
-                            Log.d("확인입니다",busline_info_list.get(15).Get_BusStation_Name());
-                            Log.d("확인입니다",busline_info_list.get(15).Get_BusStation_Num());
-                            Log.d("확인입니다",busline_info_list.get(15).Get_Node_Id());
+                            busstation_info_list=(ArrayList<BusStation_Info>)my_parser.Get_InfoList();
+                            if(busstation_info_list.get(0).Bus_Num > 0) {
+                                Log.d("확인입니다", String.valueOf(busstation_info_list.get(0).Get_Bus_LineNum()));
+                                Log.d("확인입니다", busstation_info_list.get(0).Get_Bus_StationName());
+                                Log.d("확인입니다", busstation_info_list.get(0).Get_Bus_LowPlate1());
+                                Log.d("확인입니다", busstation_info_list.get(0).Get_Bus_Station1());
+                                Log.d("확인입니다", busstation_info_list.get(0).Get_Bus_WaitMin1());
+                            }
                         }catch(Exception e){}
                     }
             }
