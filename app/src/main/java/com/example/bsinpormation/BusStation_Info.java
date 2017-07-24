@@ -11,7 +11,7 @@ public class BusStation_Info {
     private String Bus_WaitMin2;
     private String Bus_LowPlate1;  //버스 종류
     private String Bus_LowPlate2;
-    private int Bus_Num;                  //대기 버스 개수
+    public int Bus_Num;                  //대기 버스 개수
     private String Bus_Station1;         //남은 정류장 수
     private String Bus_Station2;
     private String Bus_StationName;     //정류소 이름

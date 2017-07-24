@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<BusLine_Info> busline_info_list=new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
     ArrayList<BusStation_Info> busstation_info_list=new ArrayList<BusStation_Info>();
     String Test_url= "http://data.busan.go.kr/openBus/service/busanBIMS2/stopArr?bstopid=172080301&serviceKey=xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";                 //정류소 정보 파싱 테스트를 위한 임시 변수
+    ListView busline_listview;
+    List_BusLine_Adapter line_adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,23 +87,17 @@ public class MainActivity extends AppCompatActivity {
 
                         while(Result_Xml.equals("")){}                  //AsyncTask 처리 결과를 대기합니다.
 
-                        My_Parser my_parser = new My_Parser(new Parser_BusStation(Test_url));
+                        My_Parser my_parser = new My_Parser(new Parser_Line(Result_Xml));
 
                         try{
                             my_parser.Parsing_Xml();
-                            busstation_info_list=(ArrayList<BusStation_Info>)my_parser.Get_InfoList();
-                            if(busstation_info_list.get(0).Bus_Num > 0) {
-                                Log.d("확인입니다", String.valueOf(busstation_info_list.get(0).Get_Bus_LineNum()));
-                                Log.d("확인입니다", busstation_info_list.get(0).Get_Bus_StationName());
-                                Log.d("확인입니다", busstation_info_list.get(0).Get_Bus_LowPlate1());
-                                Log.d("확인입니다", busstation_info_list.get(0).Get_Bus_Station1());
-                                Log.d("확인입니다", busstation_info_list.get(0).Get_Bus_WaitMin1());
-                            }
+                            busline_info_list=(ArrayList<BusLine_Info>)my_parser.Get_InfoList();
                         }catch(Exception e){}
                     }
             }
         }
     };
+
     public class NetworkTask extends AsyncTask<String,String,String>
     {
         private String url;

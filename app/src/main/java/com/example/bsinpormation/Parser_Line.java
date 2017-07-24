@@ -75,7 +75,6 @@ public class Parser_Line implements Parser_Inter {
                     break;
 
                 case XmlPullParser.TEXT:
-                    Log.d("ttboyText",parser.getText());
                     if (boolean_Node_Id) {
                         busline_info.Set_Node_Id(parser.getText());
                         boolean_Node_Id = false;

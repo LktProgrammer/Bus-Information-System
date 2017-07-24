@@ -70,11 +70,55 @@ public class Parser_BusStation implements Parser_Inter {
                     }
 
                     break;
+                case XmlPullParser.END_TAG:
+                    if (parser.getName().equals("item")) {
+                        BusStation_Info_List.add(busstation_info);
+                        busstation_info = null;
+                        busstation_info = new BusStation_Info();
+                    }
+                    break;
                 case XmlPullParser.TEXT:
-
-
-
-
+                    if(boolean_Bus_LineNum)
+                    {
+                        busstation_info.Set_Bus_LineNum(parser.getText());
+                        boolean_Bus_LineNum=false;
+                    }
+                    else if(boolean_Bus_LowPlate1)
+                    {
+                        busstation_info.Set_Bus_LowPlate1(parser.getText());
+                        busstation_info.Bus_Num++;
+                        boolean_Bus_LowPlate1=false;
+                    }
+                    else if(boolean_Bus_LowPlate2)
+                    {
+                        busstation_info.Set_Bus_LowPlate2(parser.getText());
+                        boolean_Bus_LowPlate2=false;
+                    }
+                    else if(boolean_Bus_WaitMin1)
+                    {
+                        busstation_info.Set_Bus_WaitMin1(parser.getText());
+                        boolean_Bus_WaitMin1=false;
+                    }
+                    else if(boolean_Bus_WaitMin2)
+                    {
+                        busstation_info.Set_Bus_WaitMin2(parser.getText());
+                        boolean_Bus_WaitMin2=false;
+                    }
+                    else if(boolean_Bus_StationName)
+                    {
+                        busstation_info.Set_Bus_StationName(parser.getText());
+                        boolean_Bus_StationName=false;
+                    }
+                    else if(boolean_Bus_Station1)
+                    {
+                        busstation_info.Set_Bus_Station1(parser.getText());
+                        boolean_Bus_Station1=false;
+                    }
+                    else if(boolean_Bus_Station2)
+                    {
+                        busstation_info.Set_Bus_Station1(parser.getText());
+                        boolean_Bus_Station2=false;
+                    }
             }
         }
 
