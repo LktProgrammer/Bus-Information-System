@@ -104,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
                             my_parser.Parsing_Xml();                      //데이터 파싱
                             busline_info_list = (ArrayList<BusLine_Info>) my_parser.Get_InfoList();    //파싱 결과인 ArrayList를 가져옴
 
-                            //listview를 통해 ArrayList의 내용을 표시함
                             line_adapter = new List_BusLine_Adapter(getApplicationContext(),R.layout.linsview_line,busline_info_list);
                             listview.setAdapter(line_adapter);
                             listview.setOnItemClickListener(ListView_Listener);
