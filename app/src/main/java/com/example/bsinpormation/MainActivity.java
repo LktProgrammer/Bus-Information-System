@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -56,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button2).setOnClickListener(mClickListener);
         findViewById(R.id.button3).setOnClickListener(mClickListener);
         findViewById(R.id.button4).setOnClickListener(mClickListener);
+        findViewById(R.id.register_button).setOnClickListener(mClickListener);
+
 
     }
 
@@ -79,11 +82,10 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.button4:
                     MyPage2.setVisibility(View.VISIBLE);
                     busline_info_list = null;
-                    ;
                     Result_Xml = "";
-                    String Bus_Id = BusNum_Input.getText().toString();   //사용자가 입력한 버스 번호를 저장
                     String Result_Url = "";
                     String Bus_Num = "";
+                    String Bus_Id = BusNum_Input.getText().toString();   //사용자가 입력한 버스 번호를 저장
 
                     if (Bus_Id.equals("")) {                                 //입력 내용이 공백인지 체크
                         Toast.makeText(getApplicationContext(), "버스 번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
@@ -94,8 +96,7 @@ public class MainActivity extends AppCompatActivity {
                         networkTask = new NetworkTask(Result_Url, null);
                         networkTask.execute();
 
-                        while (Result_Xml.equals("")) {
-                        }                  //AsyncTask 처리 결과를 대기합니다.
+                        while (Result_Xml.equals("")) {}                  //AsyncTask 처리 결과를 대기합니다.
 
                         My_Parser my_parser = new My_Parser(new Parser_Line(Result_Xml));
 
@@ -104,102 +105,98 @@ public class MainActivity extends AppCompatActivity {
                             busline_info_list = (ArrayList<BusLine_Info>) my_parser.Get_InfoList();    //파싱 결과인 ArrayList를 가져옴
 
                             //listview를 통해 ArrayList의 내용을 표시함
-                            //line_adapter = new List_BusLine_Adapter(getApplicationContext(),R.layout.linsview_line,busline_info_list);
-                            //listview.setAdapter(line_adapter);
-
-
+                            line_adapter = new List_BusLine_Adapter(getApplicationContext(),R.layout.linsview_line,busline_info_list);
+                            listview.setAdapter(line_adapter);
+                            listview.setOnItemClickListener(ListView_Listener);
                         } catch (Exception e) {
                         }
                     }
+                    break;
+                case R.id.register_button:          //등록 버튼 클릭 시 데이터 xml로 쓰기
+
+                    break;
+
+
+                    }
             }
-        }
+
     };
 
     AdapterView.OnItemClickListener ListView_Listener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
 
-            String Selected_Bus_Info=busline_info_list.get(position).Get_BusStation_Name()+
-                    busline_info_list.get(position).Get_Node_Id()+
+            String Selected_Bus_Info = busline_info_list.get(position).Get_BusStation_Name() + "/" +
+                    busline_info_list.get(position).Get_Node_Id() + "/" +
                     busline_info_list.get(position).Get_Bus_Number();
             Departure_Station.setText(Selected_Bus_Info);
         }
     };
 
-
-    public class NetworkTask extends AsyncTask<String,String,String>
-    {
+    public class NetworkTask extends AsyncTask<String, String, String> {
         private String url;
         private ContentValues values;
 
-        public NetworkTask(String url,ContentValues values)
-        {
+        public NetworkTask(String url, ContentValues values) {
             this.url = url;
             this.values = values;
         }
-        protected String doInBackground(String... params)
-        {
-            String result="";
-            UrlConnection urlconnection = new UrlConnection(this.url,values);
+
+        protected String doInBackground(String... params) {
+            String result = "";
+            UrlConnection urlconnection = new UrlConnection(this.url, values);
             result = urlconnection.Request_UrlConnect();
-            Result_Xml=result;
+            Result_Xml = result;
             return result;
         }
-        protected void onPostExecute(String s)
-        {
+
+        protected void onPostExecute(String s) {
             super.onPostExecute(s);
         }
 
     }    //비동기 처리를 위한 AsyncTask 구현 //비동기 처리를 위한 AsyncTask 구현 부분
 
-    public String Get_BusId(String bus_id)
-    {
-        String bus_num="";
-        if(bus_id.contains("-")) {          // '-' 포함되어 있다면 제거
+    public String Get_BusId(String bus_id) {
+        String bus_num = "";
+        if (bus_id.contains("-")) {          // '-' 포함되어 있다면 제거
             bus_num = bus_id.substring(0, bus_id.indexOf('-'));
-            bus_num += bus_id.substring(bus_id.indexOf('-')+1);
-        }
-        else{
+            bus_num += bus_id.substring(bus_id.indexOf('-') + 1);
+        } else {
             bus_num = bus_id;
         }
-        if(bus_num.length()==1 ||bus_num.length()==2 ){            //버스 번호가 1자리 일때와 아닐때 생성규칙을 구분하여 구현
-            bus_num = "52000" + bus_num ;
-            while(bus_num.length()!=10)
-            {
-                bus_num+="0";
+        if (bus_num.length() == 1 || bus_num.length() == 2) {            //버스 번호가 1자리 일때와 아닐때 생성규칙을 구분하여 구현
+            bus_num = "52000" + bus_num;
+            while (bus_num.length() != 10) {
+                bus_num += "0";
             }
-        }
-        else{
+        } else {
             bus_num = "5200" + bus_num;
-            while(bus_num.length()!=10)
-            {
+            while (bus_num.length() != 10) {
                 bus_num += "0";
             }
         }
         return bus_num;
     } // GetBusId() 함수 원형 부분 //버스번호를 생성규칙에 맞게 BusId로 변환하는 함수
 
-    public String Create_Url(String Request_URL,String Request_Param,String Service_Key,int Request_Case)
-    {
+    public String Create_Url(String Request_URL, String Request_Param, String Service_Key, int Request_Case) {
         String Request_Url = "";
-        switch(Request_Case){               //Requesst_Case에 따라 URL 구성이 달라지도록 구현
+        switch (Request_Case) {               //Requesst_Case에 따라 URL 구성이 달라지도록 구현
             case 1:                         //버스 노선 검색을 위한 Url 구성
                 Request_Url = "http://data.busan.go.kr/openBus/service/busanBIMS2/"
-                              +Request_URL+"?" + "lineid=" +Request_Param + "&serviceKey=" + Service_Key;
+                        + Request_URL + "?" + "lineid=" + Request_Param + "&serviceKey=" + Service_Key;
                 break;
         }
         return Request_Url;
     }  // Create_Url() 함수 원형 부분 // 요청에 알맞는 Url 형성을 위한 메소드
+
     @Override
-    protected void onDestroy()
-    {
+    protected void onDestroy() {
         super.onDestroy();
-        try
-        {
-            if(networkTask.getStatus()==AsyncTask.Status.RUNNING)
-            {
+        try {
+            if (networkTask.getStatus() == AsyncTask.Status.RUNNING) {
                 networkTask.cancel(true);
             }
-        }catch(Exception e){}
+        } catch (Exception e) {
+        }
     }
 } //onDestroy() //AsyncTask 안전하게 종료하는 부분 구현

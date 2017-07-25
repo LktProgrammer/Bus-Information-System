@@ -3,6 +3,7 @@ package com.example.bsinpormation;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.media.Image;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,12 +44,13 @@ public class List_BusLine_Adapter extends BaseAdapter {
         BusLine_Info busLine_info = data.get(position);
 
         TextView station_name = (TextView)convertView.findViewById(R.id.bus_num_textview);
-        station_name.setText(busLine_info.Get_BusStation_Name());
+        station_name.setText("정류소명 : "+busLine_info.Get_BusStation_Name());
 
         TextView bus_line = (TextView)convertView.findViewById(R.id.line_id_textview);
-        bus_line.setText(busLine_info.Get_Node_Id());
+        bus_line.setText("정류소ID: "+busLine_info.Get_Node_Id());
 
         ImageView image_view = (ImageView)convertView.findViewById(R.id.imageView2);
+
         if(busLine_info.Get_Bus_Exist()){
             image_view.setImageResource(R.drawable.exist);
         }
@@ -57,6 +59,7 @@ public class List_BusLine_Adapter extends BaseAdapter {
         }
 
         image_view.setVisibility(View.VISIBLE);
+
 
         return convertView;
 
