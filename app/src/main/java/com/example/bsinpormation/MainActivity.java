@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -23,46 +24,49 @@ import java.util.ArrayList;  //import 클래스
 
 
 public class MainActivity extends AppCompatActivity {
-    View MyPage1,MyPage2,MyPage3;       // frameLayout에 적용되지 view
+    View MyPage1, MyPage2, MyPage3;       // frameLayout에 적용되지 view
     EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
-    String Service_Key="xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";    //openApi 요청을 위한 servicekey
-    String Result_Xml="";                // 응답 결과 저장
+    String Service_Key = "xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";    //openApi 요청을 위한 servicekey
+    String Result_Xml = "";                // 응답 결과 저장
     NetworkTask networkTask;             // 비동기 처리
-    ArrayList<BusLine_Info> busline_info_list=new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
-    ArrayList<BusStation_Info> busstation_info_list=new ArrayList<BusStation_Info>();
-    String Test_url= "http://data.busan.go.kr/openBus/service/busanBIMS2/stopArr?bstopid=172080301&serviceKey=xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";                 //정류소 정보 파싱 테스트를 위한 임시 변수
+    ArrayList<BusLine_Info> busline_info_list = new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
+    ArrayList<BusStation_Info> busstation_info_list = new ArrayList<BusStation_Info>();
+    String Test_url = "http://data.busan.go.kr/openBus/service/busanBIMS2/stopArr?bstopid=172080301&serviceKey=xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";                 //정류소 정보 파싱 테스트를 위한 임시 변수
     ListView listview;
     List_BusLine_Adapter line_adapter;
     List_BusStation_Adapter busstation_adpter;
+    EditText Departure_Station;
+    EditText Arrival_Station;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main1);
 
-        listview = (ListView)findViewById(R.id.listview1);
+        listview = (ListView) findViewById(R.id.listview1);
         MyPage1 = findViewById(R.id.page1);
         MyPage2 = findViewById(R.id.page2);
         MyPage3 = findViewById(R.id.page3);
 
-        BusNum_Input = (EditText)findViewById(R.id.editText);
+        BusNum_Input = (EditText) findViewById(R.id.editText);
+        Departure_Station = (EditText) findViewById(R.id.editText2);
 
         //버튼 리스너 등록
         findViewById(R.id.button1).setOnClickListener(mClickListener);
         findViewById(R.id.button2).setOnClickListener(mClickListener);
         findViewById(R.id.button3).setOnClickListener(mClickListener);
         findViewById(R.id.button4).setOnClickListener(mClickListener);
+
     }
-    public Button.OnClickListener mClickListener = new Button.OnClickListener()
-    {
-        public void onClick(View v)
-        {
+
+    public Button.OnClickListener mClickListener = new Button.OnClickListener() {
+        public void onClick(View v) {
             //최초 이벤트 발생시에 모든 page Invisible로 설정
             MyPage1.setVisibility(View.INVISIBLE);
             MyPage2.setVisibility(View.INVISIBLE);
             MyPage3.setVisibility(View.INVISIBLE);
 
-            switch(v.getId())
-            {
+            switch (v.getId()) {
                 case R.id.button1:
                     MyPage1.setVisibility(View.VISIBLE);
                     break;
@@ -74,39 +78,54 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.button4:
                     MyPage2.setVisibility(View.VISIBLE);
-                    busline_info_list = null;;
-                    Result_Xml="";
+                    busline_info_list = null;
+                    ;
+                    Result_Xml = "";
                     String Bus_Id = BusNum_Input.getText().toString();   //사용자가 입력한 버스 번호를 저장
-                    String Result_Url="";
-                    String Bus_Num="";
+                    String Result_Url = "";
+                    String Bus_Num = "";
 
-                    if(Bus_Id.equals("")){                                 //입력 내용이 공백인지 체크
-                        Toast.makeText(getApplicationContext(),"버스 번호를 입력해주세요.",Toast.LENGTH_SHORT).show();
-                    }
-                    else{
-                        Bus_Num= Get_BusId(Bus_Id);                        //공백이 아니라면 버스번호->id로 변환해주는 Get_BusId()메소드 호출
-                        Result_Url= Create_Url("busInfoRoute",Bus_Num,Service_Key,1);
+                    if (Bus_Id.equals("")) {                                 //입력 내용이 공백인지 체크
+                        Toast.makeText(getApplicationContext(), "버스 번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Bus_Num = Get_BusId(Bus_Id);                        //공백이 아니라면 버스번호->id로 변환해주는 Get_BusId()메소드 호출
+                        Result_Url = Create_Url("busInfoRoute", Bus_Num, Service_Key, 1);
 
-                        networkTask = new NetworkTask(Result_Url,null);
+                        networkTask = new NetworkTask(Result_Url, null);
                         networkTask.execute();
 
-                        while(Result_Xml.equals("")){}                  //AsyncTask 처리 결과를 대기합니다.
+                        while (Result_Xml.equals("")) {
+                        }                  //AsyncTask 처리 결과를 대기합니다.
 
                         My_Parser my_parser = new My_Parser(new Parser_Line(Result_Xml));
 
-                        try{
+                        try {
                             my_parser.Parsing_Xml();                      //데이터 파싱
-                            busline_info_list=(ArrayList<BusLine_Info>)my_parser.Get_InfoList();    //파싱 결과인 ArrayList를 가져옴
+                            busline_info_list = (ArrayList<BusLine_Info>) my_parser.Get_InfoList();    //파싱 결과인 ArrayList를 가져옴
 
                             //listview를 통해 ArrayList의 내용을 표시함
                             //line_adapter = new List_BusLine_Adapter(getApplicationContext(),R.layout.linsview_line,busline_info_list);
                             //listview.setAdapter(line_adapter);
 
-                        }catch(Exception e){}
+
+                        } catch (Exception e) {
+                        }
                     }
             }
         }
     };
+
+    AdapterView.OnItemClickListener ListView_Listener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+
+            String Selected_Bus_Info=busline_info_list.get(position).Get_BusStation_Name()+
+                    busline_info_list.get(position).Get_Node_Id()+
+                    busline_info_list.get(position).Get_Bus_Number();
+            Departure_Station.setText(Selected_Bus_Info);
+        }
+    };
+
 
     public class NetworkTask extends AsyncTask<String,String,String>
     {
