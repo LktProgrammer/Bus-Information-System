@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button2).setOnClickListener(mClickListener);
         findViewById(R.id.button3).setOnClickListener(mClickListener);
         findViewById(R.id.button4).setOnClickListener(mClickListener);
+
+        View_BusInfo();
     }
 
     public Button.OnClickListener mClickListener = new Button.OnClickListener() {
@@ -90,38 +92,6 @@ public class MainActivity extends AppCompatActivity {
             switch (v.getId()) {
                 case R.id.button1:
                     MyPage1.setVisibility(View.VISIBLE);
-                    int count = dbHelper.Get_Count();
-                    MyBusStation_Info.clear();
-                    for(int i=0;i<count;i++)
-                    {
-                        String Request_Url = Create_Url("stopArr",dbHelper.Get_id(i),Service_Key,2);
-
-                        Result_Xml ="";
-                        networkTask = new NetworkTask(Request_Url, null);
-                        networkTask.execute();
-
-
-                        while (Result_Xml.equals("")) {}
-
-                        My_Parser my_parser = new My_Parser(new Parser_BusStation(Result_Xml));
-                        try{
-                            my_parser.Parsing_Xml();
-                            busstation_info_list = (ArrayList<BusStation_Info>)my_parser.Get_InfoList();
-
-                            for(int j=0;j<busstation_info_list.size();j++)
-                            {
-                                if(busstation_info_list.get(j).Get_Bus_LineNum().equals(dbHelper.Get_Bus_Number(i)))
-                                {
-                                    MyBusStation_Info.add(busstation_info_list.get(j));
-                                }
-                            }
-                        }catch(Exception e){};
-                    }
-
-                    busstation_adpter = new List_BusStation_Adapter(getApplicationContext(),R.layout.listview_station,MyBusStation_Info);
-                    listview2.setAdapter(busstation_adpter);
-                    listview2.setOnItemClickListener(ListView_Listener2);
-
 
                     break;
                 case R.id.button2:
@@ -167,6 +137,42 @@ public class MainActivity extends AppCompatActivity {
                     }
             }
     };
+
+    public void View_BusInfo()
+    {
+
+        int count = dbHelper.Get_Count();
+        MyBusStation_Info.clear();
+        for(int i=0;i<count;i++)
+        {
+            String Request_Url = Create_Url("stopArr",dbHelper.Get_id(i),Service_Key,2);
+
+            Result_Xml ="";
+            networkTask = new NetworkTask(Request_Url, null);
+            networkTask.execute();
+
+
+            while (Result_Xml.equals("")) {}
+
+            My_Parser my_parser = new My_Parser(new Parser_BusStation(Result_Xml));
+            try{
+                my_parser.Parsing_Xml();
+                busstation_info_list = (ArrayList<BusStation_Info>)my_parser.Get_InfoList();
+
+                for(int j=0;j<busstation_info_list.size();j++)
+                {
+                    if(busstation_info_list.get(j).Get_Bus_LineNum().equals(dbHelper.Get_Bus_Number(i)))
+                    {
+                        MyBusStation_Info.add(busstation_info_list.get(j));
+                    }
+                }
+            }catch(Exception e){};
+        }
+
+        busstation_adpter = new List_BusStation_Adapter(getApplicationContext(),R.layout.listview_station,MyBusStation_Info);
+        listview2.setAdapter(busstation_adpter);
+        listview2.setOnItemClickListener(ListView_Listener2);
+    } //View_BusInfo() 함수 원형
 
     AdapterView.OnItemClickListener ListView_Listener = new AdapterView.OnItemClickListener() {
         @Override
@@ -264,6 +270,10 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which)                      //사용자가 예를 클릭 할 경우 db에 insert
                             {
                                 dbHelper.insert(Selected_Station_Name,Selected_Bus_Number,Selected_Line_ID);
+                                MyPage2.setVisibility(View.INVISIBLE);
+                                MyPage1.setVisibility(View.VISIBLE);
+
+                                View_BusInfo();
                             }
                         })
                 .setNeutralButton("아니오",new DialogInterface.OnClickListener(){
@@ -275,13 +285,17 @@ public class MainActivity extends AppCompatActivity {
     {
         AlertDialog dialog  = new AlertDialog.Builder(this)
                 .setTitle("관심삭제하기")
-                .setMessage("해당 정류소 및 버스를 관심 삭제 하시겠습니까?\n정류소명 : "+Selected_Station_Name +"\n\n"
+                .setMessage("해당 정류소 및 버스를 관심 삭제 하시겠습니까?\n\n정류소명 : "+Selected_Station_Name +"\n"
                         +"버스번호:" +Selected_Bus_Number +"\n")
                 .setPositiveButton("예",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which)                      //사용자가 예를 클릭 할 경우 db에 insert
                             {
                                 dbHelper.Delete(Selected_Station_Name,Selected_Bus_Number);
+                                MyPage2.setVisibility(View.INVISIBLE);
+                                MyPage1.setVisibility(View.VISIBLE);
+
+                                View_BusInfo();
                             }
                         })
                 .setNeutralButton("아니오",new DialogInterface.OnClickListener(){
