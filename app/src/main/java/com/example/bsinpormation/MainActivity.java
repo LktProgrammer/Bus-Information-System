@@ -35,7 +35,7 @@ import java.util.ArrayList;  //import 클래스
 
 public class MainActivity extends AppCompatActivity {
 
-    View MyPage1, MyPage2, MyPage3;       // frameLayout에 적용되지 view
+    View MyPage1, MyPage2, MyPage3,MyPage4,MyPage5;       // frameLayout에 적용되지 view
     EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
     TextView textview;
 
@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     String Selected_Bus_Number;
     String Selected_Line_ID;
     NetworkTask networkTask;             // 비동기 처리
+
+    boolean flag;
 
     ArrayList<BusLine_Info> busline_info_list = new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
     ArrayList<BusStation_Info> busstation_info_list = new ArrayList<BusStation_Info>();
@@ -70,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
         MyPage1 = findViewById(R.id.page1);
         MyPage2 = findViewById(R.id.page2);
         MyPage3 = findViewById(R.id.page3);
+        MyPage4 = findViewById(R.id.page4);
+
 
         BusNum_Input = (EditText) findViewById(R.id.editText);
 
@@ -88,11 +92,12 @@ public class MainActivity extends AppCompatActivity {
             MyPage1.setVisibility(View.INVISIBLE);
             MyPage2.setVisibility(View.INVISIBLE);
             MyPage3.setVisibility(View.INVISIBLE);
+            MyPage4.setVisibility(View.INVISIBLE);
 
             switch (v.getId()) {
                 case R.id.button1:
-                    MyPage1.setVisibility(View.VISIBLE);
-
+                    if(flag){MyPage1.setVisibility(View.VISIBLE);}
+                    else{MyPage4.setVisibility(View.VISIBLE);}
                     break;
                 case R.id.button2:
                     MyPage2.setVisibility(View.VISIBLE);
@@ -140,12 +145,23 @@ public class MainActivity extends AppCompatActivity {
 
     public void View_BusInfo()
     {
-
+        flag = true;
+        int index = 0;
         int count = dbHelper.Get_Count();
-        MyBusStation_Info.clear();
-        for(int i=0;i<count;i++)
+        if(count==0)
         {
-            String Request_Url = Create_Url("stopArr",dbHelper.Get_id(i),Service_Key,2);
+            flag = false;
+            MyPage4.setVisibility(View.VISIBLE);
+            MyPage1.setVisibility(View.INVISIBLE);
+        }
+        else{
+            MyPage4.setVisibility(View.INVISIBLE);
+            MyPage1.setVisibility(View.VISIBLE);
+        }
+        MyBusStation_Info.clear();
+        while(index<count && flag)
+        {
+            String Request_Url = Create_Url("stopArr",dbHelper.Get_id(index),Service_Key,2);
 
             Result_Xml ="";
             networkTask = new NetworkTask(Request_Url, null);
@@ -161,12 +177,13 @@ public class MainActivity extends AppCompatActivity {
 
                 for(int j=0;j<busstation_info_list.size();j++)
                 {
-                    if(busstation_info_list.get(j).Get_Bus_LineNum().equals(dbHelper.Get_Bus_Number(i)))
+                    if(busstation_info_list.get(j).Get_Bus_LineNum().equals(dbHelper.Get_Bus_Number(index)))
                     {
                         MyBusStation_Info.add(busstation_info_list.get(j));
                     }
                 }
             }catch(Exception e){};
+            index++;
         }
 
         busstation_adpter = new List_BusStation_Adapter(getApplicationContext(),R.layout.listview_station,MyBusStation_Info);
