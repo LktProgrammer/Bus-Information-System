@@ -46,10 +46,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return result;
     }
 
-    public void Delete()
+    public void Delete(String Station_Name,String Bus_Number)
     {
         SQLiteDatabase db = getWritableDatabase();
-        db.execSQL("DELETE FROM BUSINFO WHERE BusStation='null';");
+        db.execSQL("DELETE FROM BUSINFO WHERE BusStation='" + Station_Name +"'AND BusNumber='"+Bus_Number +"';");
 
     }
 
@@ -74,4 +74,5 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         cursor.moveToPosition(count);
         return cursor.getString(2);
     }
+
 }

@@ -93,6 +93,7 @@ public class Parser_BusStation implements Parser_Inter {
                     else if(boolean_Bus_LowPlate2)
                     {
                         busstation_info.Set_Bus_LowPlate2(parser.getText());
+                        busstation_info.Bus_Num++;
                         boolean_Bus_LowPlate2=false;
                     }
                     else if(boolean_Bus_WaitMin1)
@@ -117,7 +118,7 @@ public class Parser_BusStation implements Parser_Inter {
                     }
                     else if(boolean_Bus_Station2)
                     {
-                        busstation_info.Set_Bus_Station1(parser.getText());
+                        busstation_info.Set_Bus_Station2(parser.getText());
                         boolean_Bus_Station2=false;
                     }
                     break;
