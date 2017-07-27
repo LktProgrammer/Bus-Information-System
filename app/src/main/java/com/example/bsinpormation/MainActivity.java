@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<BusStation_Info> busstation_info_list = new ArrayList<BusStation_Info>();
 
     ListView listview;
+    ListView listview2;
     List_BusLine_Adapter line_adapter;
     List_BusStation_Adapter busstation_adpter;
 
@@ -62,12 +63,12 @@ public class MainActivity extends AppCompatActivity {
         dbHelper = new DataBaseHelper(getApplicationContext(),"BusInfo",null,1);
 
         listview = (ListView) findViewById(R.id.listview1);
+        listview2 = (ListView) findViewById(R.id.listview2);
         MyPage1 = findViewById(R.id.page1);
         MyPage2 = findViewById(R.id.page2);
         MyPage3 = findViewById(R.id.page3);
 
         BusNum_Input = (EditText) findViewById(R.id.editText);
-        textview = (TextView)findViewById(R.id.textView);
 
         //버튼 리스너 등록
         findViewById(R.id.button1).setOnClickListener(mClickListener);
@@ -86,6 +87,35 @@ public class MainActivity extends AppCompatActivity {
             switch (v.getId()) {
                 case R.id.button1:
                     MyPage1.setVisibility(View.VISIBLE);
+                    int count = dbHelper.Get_Count();
+                    ArrayList<BusStation_Info> MyBusStation_Info =new ArrayList<BusStation_Info>();
+                    for(int i=0;i<count;i++)
+                    {
+                        String Request_Url = Create_Url("stopArr",dbHelper.Get_id(i),Service_Key,2);
+
+                        Result_Xml ="";
+                        networkTask = new NetworkTask(Request_Url, null);
+                        networkTask.execute();
+
+                        while (Result_Xml.equals("")) {}
+
+                        My_Parser my_parser = new My_Parser(new Parser_BusStation(Result_Xml));
+                        try{
+                            my_parser.Parsing_Xml();
+                            busstation_info_list = (ArrayList<BusStation_Info>)my_parser.Get_InfoList();
+
+                            for(int j=0;j<busstation_info_list.size();j++)
+                            {
+                                if(busstation_info_list.get(j).Get_Bus_LineNum().equals(dbHelper.Get_Bus_Number(i)))
+                                {
+                                    MyBusStation_Info.add(busstation_info_list.get(j));
+                                }
+                            }
+                        }catch(Exception e){};
+                    }
+
+                    busstation_adpter = new List_BusStation_Adapter(getApplicationContext(),R.layout.listview_station,MyBusStation_Info);
+                    listview2.setAdapter(busstation_adpter);
                     break;
                 case R.id.button2:
                     MyPage2.setVisibility(View.VISIBLE);
@@ -189,10 +219,15 @@ public class MainActivity extends AppCompatActivity {
 
     public String Create_Url(String Request_URL, String Request_Param, String Service_Key, int Request_Case) {
         String Request_Url = "";
+
         switch (Request_Case) {               //Requesst_Case에 따라 URL 구성이 달라지도록 구현
             case 1:                         //버스 노선 검색을 위한 Url 구성
                 Request_Url = "http://data.busan.go.kr/openBus/service/busanBIMS2/"
                         + Request_URL + "?" + "lineid=" + Request_Param + "&serviceKey=" + Service_Key;
+                break;
+            case 2:
+                Request_Url = "http://data.busan.go.kr/openBus/service/busanBIMS2/"
+                        + Request_URL + "?" + "bstopid=" + Request_Param + "&serviceKey=" + Service_Key;
                 break;
         }
         return Request_Url;

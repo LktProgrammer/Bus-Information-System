@@ -18,8 +18,10 @@ public class BusStation_Info {
 
     public BusStation_Info()
     {
-        this.Bus_Num = 0;
+        this.Bus_Num=0;
+        this.Bus_LineNum = "";
     }
+
     public void Set_Bus_LineNum(String Bus_LineNum){this.Bus_LineNum=Bus_LineNum;}
     public void Set_Bus_WaitMin1(String Bus_WaitMin1){this.Bus_WaitMin1=Bus_WaitMin1;}
     public void Set_Bus_WaitMin2(String Bus_WaitMin2){this.Bus_WaitMin2=Bus_WaitMin2;}

@@ -4,6 +4,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 
@@ -51,21 +52,21 @@ public class Parser_BusStation implements Parser_Inter {
                 case XmlPullParser.START_TAG:
                     Tag = parser.getName();
 
-                    if(Tag=="lineno"){
+                    if(Tag.equals("lineNo")){
                         boolean_Bus_LineNum=true;
-                    } else if(Tag=="lowplate1"){
+                    } else if(Tag.equals("lowplate1")){
                         boolean_Bus_LowPlate1=true;
-                    }else if(Tag=="lowplate2"){
+                    }else if(Tag.equals("lowplate2")){
                         boolean_Bus_LowPlate2=true;
-                    }else if(Tag=="min1"){
+                    }else if(Tag.equals("min1")){
                         boolean_Bus_WaitMin1=true;
-                    }else if(Tag=="min2"){
+                    }else if(Tag.equals("min2")){
                         boolean_Bus_WaitMin2=true;
-                    }else if(Tag=="nodeNm"){
+                    }else if(Tag.equals("nodeNm")){
                         boolean_Bus_StationName=true;
-                    }else if(Tag=="station1"){
+                    }else if(Tag.equals("station1")){
                         boolean_Bus_Station1=true;
-                    }else if(Tag=="station2") {
+                    }else if(Tag.equals("station2")) {
                         boolean_Bus_Station2 = true;
                     }
 
@@ -119,7 +120,11 @@ public class Parser_BusStation implements Parser_Inter {
                         busstation_info.Set_Bus_Station1(parser.getText());
                         boolean_Bus_Station2=false;
                     }
+                    break;
             }
+            try{
+                EventType=parser.next();
+            }catch(IOException e){}
         }
 
 
