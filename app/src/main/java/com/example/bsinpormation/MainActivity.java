@@ -15,6 +15,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,7 +59,9 @@ public class MainActivity extends AppCompatActivity {
 
     DataBaseHelper dbHelper;
 
-    ArrayList<BusStation_Info> MyBusStation_Info =new ArrayList<BusStation_Info>();
+    ArrayList<BusStation_Info> MyBusStation_Info =new ArrayList<BusStation_Info>();     // 변수선언
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
         MyPage3 = findViewById(R.id.page3);
         MyPage4 = findViewById(R.id.page4);
 
-
         BusNum_Input = (EditText) findViewById(R.id.editText);
 
         //버튼 리스너 등록
@@ -82,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button2).setOnClickListener(mClickListener);
         findViewById(R.id.button3).setOnClickListener(mClickListener);
         findViewById(R.id.button4).setOnClickListener(mClickListener);
+        findViewById(R.id.button5).setOnClickListener(mClickListener);
 
         View_BusInfo();
     }
@@ -116,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                     if (Bus_Id.equals("")) {                                 //입력 내용이 공백인지 체크
                         Toast.makeText(getApplicationContext(), "버스 번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
                     }
-                    if(Bus_Id.matches(".*[ㄱ-하-ㅣ가-힣]+.*")){
+                    if(Bus_Id.matches(".*[ㄱ-하-ㅣ가-힣]+.*")){              //입력 내용 한글 포함 체크
                         Toast.makeText(getApplicationContext(), "한글을 제외한 버스번호(숫자)를 입력하세요", Toast.LENGTH_SHORT).show();
                     }
                     else {
@@ -126,9 +129,7 @@ public class MainActivity extends AppCompatActivity {
                         networkTask = new NetworkTask(Result_Url, null);
                         networkTask.execute();
 
-                        while (Result_Xml.equals("")) {
-
-                        }                  //AsyncTask 처리 결과를 대기합니다.
+                        while (Result_Xml.equals("")) {}                  //AsyncTask 처리 결과를 대기합니다.
 
                         My_Parser my_parser = new My_Parser(new Parser_Line(Result_Xml));
 
@@ -150,6 +151,9 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     break;
+
+                case R.id.button5:
+                    View_BusInfo();
                     }
             }
     };
@@ -158,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     {
         flag = true;
         int index = 0;
-        int count = dbHelper.Get_Count();
+        int count = dbHelper.Get_Count();;
         if(count==0)
         {
             flag = false;
@@ -232,9 +236,11 @@ public class MainActivity extends AppCompatActivity {
         public NetworkTask(String url, ContentValues values) {
             this.url = url;
             this.values = values;
+
         }
 
         protected String doInBackground(String... params) {
+
             String result = "";
             UrlConnection urlconnection = new UrlConnection(this.url, values);
             result = urlconnection.Request_UrlConnect();
