@@ -115,7 +115,11 @@ public class MainActivity extends AppCompatActivity {
 
                     if (Bus_Id.equals("")) {                                 //입력 내용이 공백인지 체크
                         Toast.makeText(getApplicationContext(), "버스 번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
-                    } else {
+                    }
+                    if(Bus_Id.matches(".*[ㄱ-하-ㅣ가-힣]+.*")){
+                        Toast.makeText(getApplicationContext(), "한글을 제외한 버스번호(숫자)를 입력하세요", Toast.LENGTH_SHORT).show();
+                    }
+                    else {
                         Bus_Num = Get_BusId(Bus_Id);                        //공백이 아니라면 버스번호->id로 변환해주는 Get_BusId()메소드 호출
                         Result_Url = Create_Url("busInfoRoute", Bus_Num, Service_Key, 1);
 
@@ -131,10 +135,17 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             my_parser.Parsing_Xml();                      //데이터 파싱
                             busline_info_list = (ArrayList<BusLine_Info>) my_parser.Get_InfoList();    //파싱 결과인 ArrayList를 가져옴
+                            if(busline_info_list.size() == 0)
+                            {
+                                Toast.makeText(getApplicationContext(), "검색 결과가 없습니다. 번호를 확인해주세요", Toast.LENGTH_SHORT).show();
+                            }
+                            else
+                            {
+                                line_adapter = new List_BusLine_Adapter(getApplicationContext(),R.layout.linsview_line,busline_info_list);
+                                listview.setAdapter(line_adapter);
+                                listview.setOnItemClickListener(ListView_Listener);
+                            }
 
-                            line_adapter = new List_BusLine_Adapter(getApplicationContext(),R.layout.linsview_line,busline_info_list);
-                            listview.setAdapter(line_adapter);
-                            listview.setOnItemClickListener(ListView_Listener);
                         } catch (Exception e) {
                         }
                     }
