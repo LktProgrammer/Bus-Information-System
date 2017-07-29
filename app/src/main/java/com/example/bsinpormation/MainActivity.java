@@ -138,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
                         networkTask = new NetworkTask(0,0,Result_Url,null);
                         networkTask.execute();
                     }
+
                     break;
 
                 case R.id.button5:
