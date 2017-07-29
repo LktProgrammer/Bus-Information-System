@@ -39,12 +39,15 @@ public class MainActivity extends AppCompatActivity {
     View MyPage1, MyPage2, MyPage3,MyPage4,MyPage5;       // frameLayout에 적용되지 view
     EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
     TextView textview;
+    Button renewal;
 
     String Service_Key = "xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";    //openApi 요청을 위한 servicekey
     String Result_Xml = "";                // 응답 결과 저장
     String Selected_Station_Name;
     String Selected_Bus_Number;
     String Selected_Line_ID;
+    String[] Result = new String[10];
+    int count = 0;
     NetworkTask networkTask;             // 비동기 처리
 
     boolean flag;
@@ -60,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
     DataBaseHelper dbHelper;
 
     ArrayList<BusStation_Info> MyBusStation_Info =new ArrayList<BusStation_Info>();     // 변수선언
+
+    ProgressBar progressBar;
 
 
 
@@ -78,6 +83,11 @@ public class MainActivity extends AppCompatActivity {
         MyPage4 = findViewById(R.id.page4);
 
         BusNum_Input = (EditText) findViewById(R.id.editText);
+
+        progressBar = (ProgressBar)findViewById(R.id.progressBar1);
+        progressBar.setVisibility(View.GONE);
+        renewal = (Button)findViewById(R.id.button5);
+        renewal.setVisibility(View.INVISIBLE);
 
         //버튼 리스너 등록
         findViewById(R.id.button1).setOnClickListener(mClickListener);
@@ -111,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.button4:
                     MyPage2.setVisibility(View.VISIBLE);
                     busline_info_list = null;
-                    Result_Xml = "";
                     String Result_Url = "";
                     String Bus_Num = "";
                     String Bus_Id = BusNum_Input.getText().toString();   //사용자가 입력한 버스 번호를 저장
@@ -126,34 +135,14 @@ public class MainActivity extends AppCompatActivity {
                         Bus_Num = Get_BusId(Bus_Id);                        //공백이 아니라면 버스번호->id로 변환해주는 Get_BusId()메소드 호출
                         Result_Url = Create_Url("busInfoRoute", Bus_Num, Service_Key, 1);
 
-                        networkTask = new NetworkTask(Result_Url, null);
+                        networkTask = new NetworkTask(0,0,Result_Url,null);
                         networkTask.execute();
-
-                        while (Result_Xml.equals("")) {}                  //AsyncTask 처리 결과를 대기합니다.
-
-                        My_Parser my_parser = new My_Parser(new Parser_Line(Result_Xml));
-
-                        try {
-                            my_parser.Parsing_Xml();                      //데이터 파싱
-                            busline_info_list = (ArrayList<BusLine_Info>) my_parser.Get_InfoList();    //파싱 결과인 ArrayList를 가져옴
-                            if(busline_info_list.size() == 0)
-                            {
-                                Toast.makeText(getApplicationContext(), "검색 결과가 없습니다. 번호를 확인해주세요", Toast.LENGTH_SHORT).show();
-                            }
-                            else
-                            {
-                                line_adapter = new List_BusLine_Adapter(getApplicationContext(),R.layout.linsview_line,busline_info_list);
-                                listview.setAdapter(line_adapter);
-                                listview.setOnItemClickListener(ListView_Listener);
-                            }
-
-                        } catch (Exception e) {
-                        }
                     }
                     break;
 
                 case R.id.button5:
                     View_BusInfo();
+                    break;
                     }
             }
     };
@@ -162,48 +151,24 @@ public class MainActivity extends AppCompatActivity {
     {
         flag = true;
         int index = 0;
-        int count = dbHelper.Get_Count();;
+        count = dbHelper.Get_Count();
+        MyPage1.setVisibility(View.VISIBLE);
         if(count==0)
         {
             flag = false;
             MyPage4.setVisibility(View.VISIBLE);
             MyPage1.setVisibility(View.INVISIBLE);
+            renewal.setVisibility(View.INVISIBLE);
         }
         else{
             MyPage4.setVisibility(View.INVISIBLE);
             MyPage1.setVisibility(View.VISIBLE);
         }
         MyBusStation_Info.clear();
-        while(index<count && flag)
-        {
-            String Request_Url = Create_Url("stopArr",dbHelper.Get_id(index),Service_Key,2);
 
-            Result_Xml ="";
-            networkTask = new NetworkTask(Request_Url, null);
-            networkTask.execute();
+        networkTask = new NetworkTask(1,1,"", null);
+        networkTask.execute();
 
-
-            while (Result_Xml.equals("")) {}
-
-            My_Parser my_parser = new My_Parser(new Parser_BusStation(Result_Xml));
-            try{
-                my_parser.Parsing_Xml();
-                busstation_info_list = (ArrayList<BusStation_Info>)my_parser.Get_InfoList();
-
-                for(int j=0;j<busstation_info_list.size();j++)
-                {
-                    if(busstation_info_list.get(j).Get_Bus_LineNum().equals(dbHelper.Get_Bus_Number(index)))
-                    {
-                        MyBusStation_Info.add(busstation_info_list.get(j));
-                    }
-                }
-            }catch(Exception e){};
-            index++;
-        }
-
-        busstation_adpter = new List_BusStation_Adapter(getApplicationContext(),R.layout.listview_station,MyBusStation_Info);
-        listview2.setAdapter(busstation_adpter);
-        listview2.setOnItemClickListener(ListView_Listener2);
     } //View_BusInfo() 함수 원형
 
     AdapterView.OnItemClickListener ListView_Listener = new AdapterView.OnItemClickListener() {
@@ -225,31 +190,100 @@ public class MainActivity extends AppCompatActivity {
             Selected_Station_Name= MyBusStation_Info.get(position).Get_Bus_StationName();
             Selected_Bus_Number = MyBusStation_Info.get(position).Get_Bus_LineNum();
             AlertDialog dialog  = Get_Dialog2(position);
-            Log.d("fffff","dd");
             dialog.show();
         }
     };  //Listview의 OnItemClickListener
-    public class NetworkTask extends AsyncTask<String, String, String> {
+    public class NetworkTask extends AsyncTask<String, ProgressBar, String> {
         private String url;
         private ContentValues values;
+        private int process_type;
+        private int num;
 
-        public NetworkTask(String url, ContentValues values) {
+        public NetworkTask(int index,int process_type,String url, ContentValues values) {
             this.url = url;
             this.values = values;
-
+            this.process_type = process_type;
+            this.num = index;
         }
 
+        protected void onPreExecute()
+        {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+        protected void onProgressUpdate(ProgressBar... params)
+        {
+            super.onPreExecute();
+        }
         protected String doInBackground(String... params) {
-
             String result = "";
-            UrlConnection urlconnection = new UrlConnection(this.url, values);
-            result = urlconnection.Request_UrlConnect();
-            Result_Xml = result;
+            if(process_type==1)
+            {
+                for(int i=0;i<dbHelper.Get_Count();i++)
+                {
+                    Result[i]= "";
+                    String Request_Url = Create_Url("stopArr", dbHelper.Get_id(i), Service_Key, 2);
+                    UrlConnection urlconnection = new UrlConnection(Request_Url, values);
+                    result = urlconnection.Request_UrlConnect();
+                    Result[i] = result;
+                }
+            }
+            else
+            {
+                UrlConnection urlconnection = new UrlConnection(this.url, values);
+                result = urlconnection.Request_UrlConnect();
+                Result_Xml = result;
+            }
             return result;
         }
 
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+
+            if (process_type == 0) {
+                My_Parser my_parser = new My_Parser(new Parser_Line(Result_Xml));
+
+                try {
+                    my_parser.Parsing_Xml();                      //데이터 파싱
+                    busline_info_list = (ArrayList<BusLine_Info>) my_parser.Get_InfoList();    //파싱 결과인 ArrayList를 가져옴
+                    if (busline_info_list.size() == 0) {
+                        Toast.makeText(getApplicationContext(), "검색 결과가 없습니다. 번호를 확인해주세요", Toast.LENGTH_SHORT).show();
+                    } else {
+                        line_adapter = new List_BusLine_Adapter(getApplicationContext(), R.layout.linsview_line, busline_info_list);
+                        listview.setAdapter(line_adapter);
+                        listview.setOnItemClickListener(ListView_Listener);
+                    }
+
+                } catch (Exception e) {
+                }
+            }
+            else if(process_type==1) {
+                int index = 0;
+                while(index<count && flag)
+                {
+                    Log.d("kkk","cc");
+                    My_Parser my_parser = new My_Parser(new Parser_BusStation(Result[index]));
+
+                    try{
+                        my_parser.Parsing_Xml();
+                        busstation_info_list = (ArrayList<BusStation_Info>)my_parser.Get_InfoList();
+
+                        for(int j=0;j<busstation_info_list.size();j++)
+                        {
+                            if(busstation_info_list.get(j).Get_Bus_LineNum().equals(dbHelper.Get_Bus_Number(index)))
+                            {
+                                MyBusStation_Info.add(busstation_info_list.get(j));
+                            }
+                        }
+                    }catch(Exception e){};
+                    index++;
+                }
+                busstation_adpter = new List_BusStation_Adapter(getApplicationContext(),R.layout.listview_station,MyBusStation_Info);
+                listview2.setAdapter(busstation_adpter);
+                listview2.setOnItemClickListener(ListView_Listener2);
+                renewal.setVisibility(View.VISIBLE);
+            }
+            progressBar.setVisibility(View.GONE);
         }
 
     }    //class NetworkTask 원형 // 비동기 처리를 위한 AsyncTask 구현 //비동기 처리를 위한 AsyncTask 구현 부분
@@ -304,10 +338,9 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which)                      //사용자가 예를 클릭 할 경우 db에 insert
                             {
                                 dbHelper.insert(Selected_Station_Name,Selected_Bus_Number,Selected_Line_ID);
+                                View_BusInfo();
                                 MyPage2.setVisibility(View.INVISIBLE);
                                 MyPage1.setVisibility(View.VISIBLE);
-
-                                View_BusInfo();
                             }
                         })
                 .setNeutralButton("아니오",new DialogInterface.OnClickListener(){
