@@ -3,6 +3,7 @@ package com.example.bsinpormation;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.support.v7.app.AlertDialog;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.Xml;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
     TextView textview;
     Button renewal;
+    Button Page_Button1,Page_Button2,Page_Button3;
 
     String Service_Key = "xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";    //openApi 요청을 위한 servicekey
     String Result_Xml = "";                // 응답 결과 저장
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<BusStation_Info> MyBusStation_Info =new ArrayList<BusStation_Info>();     // 변수선언
 
     ProgressBar progressBar;
-
+    InputMethodManager Input_Key;
 
 
     @Override
@@ -87,6 +90,16 @@ public class MainActivity extends AppCompatActivity {
         progressBar = (ProgressBar)findViewById(R.id.progressBar1);
         progressBar.setVisibility(View.GONE);
         renewal = (Button)findViewById(R.id.button5);
+        Page_Button1 = (Button)findViewById(R.id.button1);
+        Page_Button2 = (Button)findViewById(R.id.button2);
+        Page_Button3 = (Button)findViewById(R.id.button3);
+
+        Page_Button1.setBackgroundColor(Color.WHITE);
+        Page_Button2.setBackgroundColor(Color.GRAY);
+        Page_Button3.setBackgroundColor(Color.GRAY);
+
+
+
         renewal.setVisibility(View.INVISIBLE);
 
         //버튼 리스너 등록
@@ -95,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button3).setOnClickListener(mClickListener);
         findViewById(R.id.button4).setOnClickListener(mClickListener);
         findViewById(R.id.button5).setOnClickListener(mClickListener);
+
+        Input_Key = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
 
         View_BusInfo();
     }
@@ -109,13 +124,22 @@ public class MainActivity extends AppCompatActivity {
 
             switch (v.getId()) {
                 case R.id.button1:
+                    Page_Button1.setBackgroundColor(Color.WHITE);
+                    Page_Button2.setBackgroundColor(Color.GRAY);
+                    Page_Button3.setBackgroundColor(Color.GRAY);
                     if(flag){MyPage1.setVisibility(View.VISIBLE);}
                     else{MyPage4.setVisibility(View.VISIBLE);}
                     break;
                 case R.id.button2:
+                    Page_Button1.setBackgroundColor(Color.GRAY);
+                    Page_Button2.setBackgroundColor(Color.WHITE);
+                    Page_Button3.setBackgroundColor(Color.GRAY);
                     MyPage2.setVisibility(View.VISIBLE);
                     break;
                 case R.id.button3:
+                    Page_Button1.setBackgroundColor(Color.GRAY);
+                    Page_Button2.setBackgroundColor(Color.GRAY);
+                    Page_Button3.setBackgroundColor(Color.WHITE);
                     MyPage3.setVisibility(View.VISIBLE);
                     break;
                 case R.id.button4:
@@ -124,6 +148,8 @@ public class MainActivity extends AppCompatActivity {
                     String Result_Url = "";
                     String Bus_Num = "";
                     String Bus_Id = BusNum_Input.getText().toString();   //사용자가 입력한 버스 번호를 저장
+                    Input_Key.hideSoftInputFromWindow(BusNum_Input.getWindowToken(),0);
+
 
                     if (Bus_Id.equals("")) {                                 //입력 내용이 공백인지 체크
                         Toast.makeText(getApplicationContext(), "버스 번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
@@ -342,6 +368,9 @@ public class MainActivity extends AppCompatActivity {
                                 View_BusInfo();
                                 MyPage2.setVisibility(View.INVISIBLE);
                                 MyPage1.setVisibility(View.VISIBLE);
+                                Page_Button1.setBackgroundColor(Color.WHITE);
+                                Page_Button2.setBackgroundColor(Color.GRAY);
+                                Page_Button3.setBackgroundColor(Color.GRAY);
                             }
                         })
                 .setNeutralButton("아니오",new DialogInterface.OnClickListener(){
