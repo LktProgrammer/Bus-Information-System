@@ -12,14 +12,19 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.Xml;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import net.daum.mf.map.api.MapPoint;
+import net.daum.mf.map.api.MapView;
 
 import org.xmlpull.v1.XmlSerializer;
 
@@ -54,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     NetworkTask networkTask;             // 비동기 처리
 
     boolean flag;
+    boolean Map_Flag=true;
 
     ArrayList<BusLine_Info> busline_info_list = new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
     ArrayList<BusStation_Info> busstation_info_list = new ArrayList<BusStation_Info>();
@@ -69,6 +75,8 @@ public class MainActivity extends AppCompatActivity {
 
     ProgressBar progressBar;
     InputMethodManager Input_Key;
+   MapView mapview;
+    LinearLayout contatiner;
 
 
     @Override
@@ -98,8 +106,6 @@ public class MainActivity extends AppCompatActivity {
         Page_Button2.setBackgroundColor(Color.GRAY);
         Page_Button3.setBackgroundColor(Color.GRAY);
 
-
-
         renewal.setVisibility(View.INVISIBLE);
 
         //버튼 리스너 등록
@@ -110,6 +116,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button5).setOnClickListener(mClickListener);
 
         Input_Key = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+        mapview = new MapView(this);
+
 
         View_BusInfo();
     }
@@ -127,10 +135,19 @@ public class MainActivity extends AppCompatActivity {
                     Page_Button1.setBackgroundColor(Color.WHITE);
                     Page_Button2.setBackgroundColor(Color.GRAY);
                     Page_Button3.setBackgroundColor(Color.GRAY);
-                    if(flag){MyPage1.setVisibility(View.VISIBLE);}
-                    else{MyPage4.setVisibility(View.VISIBLE);}
+                    mapview.setVisibility(View.VISIBLE);
+                    if(flag)
+                    {
+                        MyPage1.setVisibility(View.VISIBLE);
+                        mapview.setVisibility(View.VISIBLE);
+                    }
+                    else{
+                        MyPage4.setVisibility(View.VISIBLE);
+                        mapview.setVisibility(View.VISIBLE);
+                    }
                     break;
                 case R.id.button2:
+                    mapview.setVisibility(View.INVISIBLE);
                     Page_Button1.setBackgroundColor(Color.GRAY);
                     Page_Button2.setBackgroundColor(Color.WHITE);
                     Page_Button3.setBackgroundColor(Color.GRAY);
@@ -141,6 +158,16 @@ public class MainActivity extends AppCompatActivity {
                     Page_Button2.setBackgroundColor(Color.GRAY);
                     Page_Button3.setBackgroundColor(Color.WHITE);
                     MyPage3.setVisibility(View.VISIBLE);
+
+                    if(Map_Flag)
+                    {
+                        contatiner = (LinearLayout) findViewById(R.id.page3);
+                        mapview.setDaumMapApiKey("163353b3d648115a323c09dd8b9530d3");
+                        contatiner.addView(mapview);
+                        Map_Flag=false;
+                    }
+                    mapview.setVisibility(View.VISIBLE);
+
                     break;
                 case R.id.button4:
                     MyPage2.setVisibility(View.VISIBLE);
