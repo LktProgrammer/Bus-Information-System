@@ -1,11 +1,22 @@
 package com.example.bsinpormation;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.provider.ContactsContract;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -38,7 +49,11 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.util.ArrayList;  //import 클래스
+import java.security.Provider;
+import java.util.ArrayList;
+import java.util.List;
+
+import static android.content.Intent.ACTION_VIEW;//import 클래스
 
 
 public class MainActivity extends AppCompatActivity {
@@ -49,17 +64,18 @@ public class MainActivity extends AppCompatActivity {
     Button renewal;
     Button Page_Button1,Page_Button2,Page_Button3;
 
-    String Service_Key = "xz2T8UWgGRf26MT53WiDx%2F9Zw0Cgs8oH5zicdOayNo0mC3P9gAeUSdcFHRAfjALQYwxSCrmcL6MKn1uJgTUngQ%3D%3D";    //openApi 요청을 위한 servicekey
+    String Service_Key = "ZoZXyocp1pZ6ikv7VCNZlKvVFDCjUVWM%2BiwgZ2AHblNEJX6Qr%2FblSS43%2BzhhmM0%2Fapmwo0SAbYc4MkgYRqNrVA%3D%3D";    //openApi 요청을 위한 servicekey
     String Result_Xml = "";                // 응답 결과 저장
     String Selected_Station_Name;
     String Selected_Bus_Number;
     String Selected_Line_ID;
     String[] Result = new String[10];
     int count = 0;
+    double Current_lat,Current_lng;
     NetworkTask networkTask;             // 비동기 처리
 
     boolean flag;
-    boolean Map_Flag=true;
+    boolean Map_Flag,Map_Flag2=true;
 
     ArrayList<BusLine_Info> busline_info_list = new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
     ArrayList<BusStation_Info> busstation_info_list = new ArrayList<BusStation_Info>();
@@ -71,19 +87,21 @@ public class MainActivity extends AppCompatActivity {
 
     DataBaseHelper dbHelper;
 
-    ArrayList<BusStation_Info> MyBusStation_Info =new ArrayList<BusStation_Info>();     // 변수선언
+    ArrayList<BusStation_Info> MyBusStation_Info =new ArrayList<BusStation_Info>();
 
     ProgressBar progressBar;
     InputMethodManager Input_Key;
-   MapView mapview;
+    MapView mapview;
     LinearLayout contatiner;
+    LocationManager location_Manager;  // 변수선언
+
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main1);
-
         dbHelper = new DataBaseHelper(getApplicationContext(),"BusInfo",null,1);
 
         listview = (ListView) findViewById(R.id.listview1);
@@ -116,6 +134,8 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button5).setOnClickListener(mClickListener);
 
         Input_Key = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+        location_Manager=(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+
         mapview = new MapView(this);
 
 
@@ -166,8 +186,16 @@ public class MainActivity extends AppCompatActivity {
                         contatiner.addView(mapview);
                         Map_Flag=false;
                     }
-                    mapview.setVisibility(View.VISIBLE);
 
+                    int getCheck = ContextCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.ACCESS_COARSE_LOCATION);
+
+                    if(getCheck == PackageManager.PERMISSION_DENIED)
+                    {
+                        if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.M) {
+                            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1000);
+                        }
+                    }
+                    location_Manager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,locationlistener);
                     break;
                 case R.id.button4:
                     MyPage2.setVisibility(View.VISIBLE);
@@ -200,6 +228,23 @@ public class MainActivity extends AppCompatActivity {
                     }
             }
     };
+
+    LocationListener locationlistener =new LocationListener() {
+        public void onLocationChanged(Location location)
+        {
+            Current_lat = location.getLatitude();
+            Current_lng= location.getLongitude();
+            if(Map_Flag2)
+            {
+                mapview.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(Current_lat, Current_lng), true);
+                mapview.setVisibility(View.VISIBLE);
+                Map_Flag2=false;
+            }
+        }
+        public void onStatusChanged(String provider,int status,Bundle exteas){}
+        public void onProviderEnabled(String provider){}
+        public void onProviderDisabled(String provider){}
+    }; //LocationListener 원형
 
     public void View_BusInfo()
     {
@@ -376,6 +421,10 @@ public class MainActivity extends AppCompatActivity {
                 Request_Url = "http://data.busan.go.kr/openBus/service/busanBIMS2/"
                         + Request_URL + "?" + "bstopid=" + Request_Param + "&serviceKey=" + Service_Key;
                 break;
+                /*Request_Url = "http://openapi.tago.go.kr/openapi/service/BusSttnInfoInqireService/"
+                        +Request_URL + "?" +"serviceKey" + Service_Key +"&gpsLati=" + + "&gpsLong=" ++;*/
+            case 3:
+
         }
         return Request_Url;
     }  // Create_Url() 함수 원형 부분 // 요청에 알맞는 Url 형성을 위한 메소드
