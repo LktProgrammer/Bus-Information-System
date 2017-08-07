@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -34,7 +35,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import net.daum.mf.map.api.CameraUpdateFactory;
+import net.daum.mf.map.api.MapPOIItem;
 import net.daum.mf.map.api.MapPoint;
+import net.daum.mf.map.api.MapPointBounds;
 import net.daum.mf.map.api.MapView;
 
 import org.xmlpull.v1.XmlSerializer;
@@ -56,7 +60,7 @@ import java.util.List;
 import static android.content.Intent.ACTION_VIEW;//import 클래스
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     View MyPage1, MyPage2, MyPage3,MyPage4,MyPage5;       // frameLayout에 적용되지 view
     EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
@@ -75,10 +79,12 @@ public class MainActivity extends AppCompatActivity {
     NetworkTask networkTask;             // 비동기 처리
 
     boolean flag;
-    boolean Map_Flag,Map_Flag2=true;
+    boolean Map_Flag=true;
+    boolean Map_Flag2=true;
 
     ArrayList<BusLine_Info> busline_info_list = new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
     ArrayList<BusStation_Info> busstation_info_list = new ArrayList<BusStation_Info>();
+    ArrayList<BusStation_Location> busstation_location = new ArrayList<>();
 
     ListView listview;
     ListView listview2;
@@ -92,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar progressBar;
     InputMethodManager Input_Key;
     MapView mapview;
-    LinearLayout contatiner;
+    ViewGroup contatiner;
     LocationManager location_Manager;  // 변수선언
 
 
@@ -137,8 +143,6 @@ public class MainActivity extends AppCompatActivity {
         location_Manager=(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
 
         mapview = new MapView(this);
-
-
         View_BusInfo();
     }
 
@@ -178,12 +182,13 @@ public class MainActivity extends AppCompatActivity {
                     Page_Button2.setBackgroundColor(Color.GRAY);
                     Page_Button3.setBackgroundColor(Color.WHITE);
                     MyPage3.setVisibility(View.VISIBLE);
+                    mapview.setVisibility(View.VISIBLE);
 
                     if(Map_Flag)
                     {
-                        contatiner = (LinearLayout) findViewById(R.id.page3);
-                        mapview.setDaumMapApiKey("163353b3d648115a323c09dd8b9530d3");
+                        contatiner = (ViewGroup) findViewById(R.id.page3);
                         contatiner.addView(mapview);
+                        mapview.setDaumMapApiKey("163353b3d648115a323c09dd8b9530d3");
                         Map_Flag=false;
                     }
 
@@ -216,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                         Bus_Num = Get_BusId(Bus_Id);                        //공백이 아니라면 버스번호->id로 변환해주는 Get_BusId()메소드 호출
                         Result_Url = Create_Url("busInfoRoute", Bus_Num, Service_Key, 1);
 
-                        networkTask = new NetworkTask(0,0,Result_Url,null);
+                        networkTask = new NetworkTask(0,2,Result_Url,null);
                         networkTask.execute();
                     }
 
@@ -236,10 +241,17 @@ public class MainActivity extends AppCompatActivity {
             Current_lng= location.getLongitude();
             if(Map_Flag2)
             {
-                mapview.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(Current_lat, Current_lng), true);
-                mapview.setVisibility(View.VISIBLE);
-                Map_Flag2=false;
+                Log.d("sssss",String.valueOf(Current_lat));
+                Log.d("sssss",String.valueOf(Current_lng));
+                mapview.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(
+                        Current_lat, Current_lng), true);
+                String Result_Url = Create_Url("getCrdntPrxmtSttnList",Service_Key,Service_Key,3);
+
+                networkTask = new NetworkTask(0,2,Result_Url,null);
+                networkTask.execute();
             }
+
+
         }
         public void onStatusChanged(String provider,int status,Bundle exteas){}
         public void onProviderEnabled(String provider){}
@@ -360,7 +372,6 @@ public class MainActivity extends AppCompatActivity {
                 int index = 0;
                 while(index<count && flag)
                 {
-                    Log.d("kkk","cc");
                     My_Parser my_parser = new My_Parser(new Parser_BusStation(Result[index]));
 
                     try{
@@ -381,6 +392,27 @@ public class MainActivity extends AppCompatActivity {
                 listview2.setAdapter(busstation_adpter);
                 listview2.setOnItemClickListener(ListView_Listener2);
                 renewal.setVisibility(View.VISIBLE);
+            }
+
+            else if(process_type==2)
+            {
+                My_Parser my_parser = new My_Parser(new Parser_Location(Result_Xml));
+                try
+                {
+                    my_parser.Parsing_Xml();
+                    busstation_location =  (ArrayList<BusStation_Location>)my_parser.Get_InfoList();
+                    for(int i=0;i<busstation_location.size();i++)
+                    {
+                        MapPOIItem marker = new MapPOIItem();
+                        marker.setItemName(busstation_location.get(i).Get_StationName());
+                        marker.setTag(i);
+                        marker.setMapPoint(MapPoint.mapPointWithGeoCoord(
+                                Double.valueOf(busstation_location.get(i).Get_lat()),Double.valueOf(busstation_location.get(i).Get_lng())));
+                        marker.setMarkerType(MapPOIItem.MarkerType.BluePin);
+                        marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
+                        mapview.addPOIItem(marker);
+                    }
+                }catch(Exception e){}
             }
             progressBar.setVisibility(View.GONE);
         }
@@ -421,9 +453,11 @@ public class MainActivity extends AppCompatActivity {
                 Request_Url = "http://data.busan.go.kr/openBus/service/busanBIMS2/"
                         + Request_URL + "?" + "bstopid=" + Request_Param + "&serviceKey=" + Service_Key;
                 break;
-                /*Request_Url = "http://openapi.tago.go.kr/openapi/service/BusSttnInfoInqireService/"
-                        +Request_URL + "?" +"serviceKey" + Service_Key +"&gpsLati=" + + "&gpsLong=" ++;*/
+
             case 3:
+                Request_Url = "http://openapi.tago.go.kr/openapi/service/BusSttnInfoInqireService/"
+                        +Request_URL + "?" +"serviceKey=" + Service_Key +"&gpsLati=" + Current_lat+ "&gpsLong=" +Current_lng;
+                break;
 
         }
         return Request_Url;

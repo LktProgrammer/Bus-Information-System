@@ -17,7 +17,6 @@ import java.util.ArrayList;
 public class Parser_Line implements Parser_Inter {
     private String xml;
     private ArrayList<BusLine_Info> BusLine_Info_List;
-    private ArrayList<BusStation_Info> BusLine_Info_List2;
 
     public Parser_Line(String xml)
     {
