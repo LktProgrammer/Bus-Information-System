@@ -45,8 +45,10 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -57,7 +59,10 @@ import java.security.Provider;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.content.Intent.ACTION_VIEW;//import 클래스
+import jxl.Sheet;
+import jxl.Workbook;
+
+import static android.content.Intent.ACTION_VIEW; //import 클래스
 
 
 public class MainActivity extends AppCompatActivity{
@@ -100,9 +105,6 @@ public class MainActivity extends AppCompatActivity{
     MapView mapview;
     ViewGroup contatiner;
     LocationManager location_Manager;  // 변수선언
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -209,8 +211,6 @@ public class MainActivity extends AppCompatActivity{
                     String Bus_Num = "";
                     String Bus_Id = BusNum_Input.getText().toString();   //사용자가 입력한 버스 번호를 저장
                     Input_Key.hideSoftInputFromWindow(BusNum_Input.getWindowToken(),0);
-
-
                     if (Bus_Id.equals("")) {                                 //입력 내용이 공백인지 체크
                         Toast.makeText(getApplicationContext(), "버스 번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
                     }
@@ -241,17 +241,42 @@ public class MainActivity extends AppCompatActivity{
             Current_lng= location.getLongitude();
             if(Map_Flag2)
             {
-                Log.d("sssss",String.valueOf(Current_lat));
-                Log.d("sssss",String.valueOf(Current_lng));
                 mapview.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(
                         Current_lat, Current_lng), true);
-                String Result_Url = Create_Url("getCrdntPrxmtSttnList",Service_Key,Service_Key,3);
+                Workbook workbook = null;
+                Sheet sheet = null;
 
-                networkTask = new NetworkTask(0,2,Result_Url,null);
-                networkTask.execute();
+                try{
+                    InputStream is = getBaseContext().getResources().getAssets().open("StationInfo.xls");
+                    workbook=Workbook.getWorkbook(is);
+                    if(workbook !=null)
+                    {
+                        sheet = workbook.getSheet(0);
+                        if(sheet !=null)
+                        {
+                            int nMaxColum = 2;
+                            int nRowStartIndex = 0;
+                            int nRowEndIndex = sheet.getColumn(nMaxColum-1).length-1;
+                            int nColumnStartIndex = 0;
+                            int nColumnEndIndex = sheet.getRow(2).length -1;
+                            int index=0;
+                            for(int nRow = nRowStartIndex+1;nRow<=nRowEndIndex;nRow++)
+                            {
+                                String ss= sheet.getCell(nColumnStartIndex,nRow).getContents();
+                                if(ss.equals("")){break;}
+                                MapPOIItem marker2 = new MapPOIItem();
+                                marker2.setTag(Integer.valueOf(ss));
+                                marker2.setItemName(sheet.getCell(nColumnStartIndex+1,nRow).getContents());
+                                marker2.setMapPoint(MapPoint.mapPointWithGeoCoord(Change_Coordinate(sheet.getCell(nColumnStartIndex+2,nRow).getContents()),Change_Coordinate(sheet.getCell(nColumnStartIndex+3,nRow).getContents())));
+                                marker2.setMarkerType(MapPOIItem.MarkerType.BluePin);
+                                marker2.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
+                                mapview.addPOIItem(marker2);
+                            }
+                        }
+                    }
+                }catch(Exception e){}
+                Map_Flag2=false;
             }
-
-
         }
         public void onStatusChanged(String provider,int status,Bundle exteas){}
         public void onProviderEnabled(String provider){}
@@ -394,26 +419,7 @@ public class MainActivity extends AppCompatActivity{
                 renewal.setVisibility(View.VISIBLE);
             }
 
-            else if(process_type==2)
-            {
-                My_Parser my_parser = new My_Parser(new Parser_Location(Result_Xml));
-                try
-                {
-                    my_parser.Parsing_Xml();
-                    busstation_location =  (ArrayList<BusStation_Location>)my_parser.Get_InfoList();
-                    for(int i=0;i<busstation_location.size();i++)
-                    {
-                        MapPOIItem marker = new MapPOIItem();
-                        marker.setItemName(busstation_location.get(i).Get_StationName());
-                        marker.setTag(i);
-                        marker.setMapPoint(MapPoint.mapPointWithGeoCoord(
-                                Double.valueOf(busstation_location.get(i).Get_lat()),Double.valueOf(busstation_location.get(i).Get_lng())));
-                        marker.setMarkerType(MapPOIItem.MarkerType.BluePin);
-                        marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
-                        mapview.addPOIItem(marker);
-                    }
-                }catch(Exception e){}
-            }
+
             progressBar.setVisibility(View.GONE);
         }
 
@@ -452,11 +458,6 @@ public class MainActivity extends AppCompatActivity{
             case 2:
                 Request_Url = "http://data.busan.go.kr/openBus/service/busanBIMS2/"
                         + Request_URL + "?" + "bstopid=" + Request_Param + "&serviceKey=" + Service_Key;
-                break;
-
-            case 3:
-                Request_Url = "http://openapi.tago.go.kr/openapi/service/BusSttnInfoInqireService/"
-                        +Request_URL + "?" +"serviceKey=" + Service_Key +"&gpsLati=" + Current_lat+ "&gpsLong=" +Current_lng;
                 break;
 
         }
@@ -510,6 +511,15 @@ public class MainActivity extends AppCompatActivity{
                 }).create();
         return dialog;
     }     //AlertDialog 원형 2
+
+    public double Change_Coordinate(String Data)
+    {
+        String[] Coordinate = Data.split("[.|.|.]");
+        double dmsdo = Double.valueOf(Coordinate[0]);
+        double dmsMin = Double.valueOf(Coordinate[1]);
+        double dmsSe = Double.valueOf(Coordinate[2]);
+        return dmsdo + dmsMin/60 + dmsSe/3600;
+    }   //Change_Coordinate
 
     @Override
     protected void onDestroy() {
