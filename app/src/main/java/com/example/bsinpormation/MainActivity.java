@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
 
     String Service_Key = "ZoZXyocp1pZ6ikv7VCNZlKvVFDCjUVWM%2BiwgZ2AHblNEJX6Qr%2FblSS43%2BzhhmM0%2Fapmwo0SAbYc4MkgYRqNrVA%3D%3D";    //openApi 요청을 위한 servicekey
     String Result_Xml = "";                // 응답 결과 저장
-    String Selected_Station_Name,Selected_Bus_Number,Selected_Line_ID;
+    String Selected_Station_Name,Selected_Bus_Number,Selected_Line_ID,BusStationId,Arsno;
     String[] Result = new String[10];
     int count = 0;
     double Current_lat,Current_lng;
@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
     ArrayList<BusLine_Info> busline_info_list = new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
     ArrayList<BusStation_Info> busstation_info_list = new ArrayList<BusStation_Info>();
     ArrayList<BusStation_Location> busstation_location = new ArrayList<>();
+    ArrayList<String> StationID = new ArrayList<String>();
 
     ListView listview;
     ListView listview2;
@@ -217,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                         Bus_Num = Get_BusId(Bus_Id);                        //공백이 아니라면 버스번호->id로 변환해주는 Get_BusId()메소드 호출
                         Result_Url = Create_Url("busInfoRoute", Bus_Num, Service_Key, 1);
 
-                        networkTask = new NetworkTask(0,2,Result_Url,null);
+                        networkTask = new NetworkTask(0,0,Result_Url,null);
                         networkTask.execute();
                     }
 
@@ -270,7 +271,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                             }
                         }
                     }
-                }catch(Exception e){Log.d("터짐",e.getMessage());}
+                }catch(Exception e){}
                 mapview.setPOIItemEventListener(MainActivity.this);
                 Map_Flag2=false;
 
@@ -331,13 +332,18 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
     @Override
     public void onPOIItemSelected(MapView mapView, MapPOIItem mapPOIItem) {
 
+        Arsno = String.valueOf(mapPOIItem.getTag());
+        AlertDialog dialog;
+        dialog = Get_Dialog3();
+        dialog.show();
+
     }
     @Override
     public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem){}
     @Override
     public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem, MapPOIItem.CalloutBalloonButtonType calloutBalloonButtonType) {}
     @Override
-    public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {}
+    public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {}   //PoIItemEventListener
 
     public class NetworkTask extends AsyncTask<String, ProgressBar, String> {
         private String url;
@@ -428,6 +434,17 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                 listview2.setOnItemClickListener(ListView_Listener2);
                 renewal.setVisibility(View.VISIBLE);
             }
+            else if(process_type==2)
+            {
+                My_Parser my_parser = new My_Parser(new Parser_StationID(Result_Xml));
+                try{
+                    my_parser.Parsing_Xml();
+                    StationID = (ArrayList<String>)my_parser.Get_InfoList();
+                    //엑티비티 전환
+
+                }catch(Exception e){}
+
+            }
 
 
             progressBar.setVisibility(View.GONE);
@@ -471,7 +488,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                 break;
             case 3:
                 Request_Url = "http://data.busan.go.kr/openBus/service/busanBIMS2/"
-                        +Request_URL + "?" + "arsno=" + "&serviceKey=" + Service_Key;
+                        +Request_URL + "?" + "arsno="+Request_Param + "&serviceKey=" + Service_Key;
 
         }
         return Request_Url;
@@ -501,7 +518,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                     public void onClick(DialogInterface dialog,int which){}                             //아니오를 클릭한 경우 아무 처리하지 않음
                 }).create();
         return dialog;
-    }   //AlertDialog 원형 1
+    }   //AlertDialog1 원형
     public AlertDialog Get_Dialog2(int position)
     {
         AlertDialog dialog  = new AlertDialog.Builder(this)
@@ -523,7 +540,28 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                     public void onClick(DialogInterface dialog,int which){}                             //아니오를 클릭한 경우 아무 처리하지 않음
                 }).create();
         return dialog;
-    }     //AlertDialog 원형 2
+    }     //AlertDialog2 원형
+    public AlertDialog Get_Dialog3()
+    {
+        AlertDialog dialog  = new AlertDialog.Builder(this)
+                .setTitle("조회하기")
+                .setMessage("해당 정류소의 버스 정보를 보시겠습니까?")
+                .setPositiveButton("예",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                if(Arsno.length()==4) {Arsno = "0" + Arsno;}
+                                String Result_Url = Create_Url("busStop", Arsno, Service_Key, 3);
+                                networkTask = new NetworkTask(0,2,Result_Url,null);
+                                networkTask.execute();
+
+                            }
+                        })
+                .setNeutralButton("아니오",new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog,int which){}                             //아니오를 클릭한 경우 아무 처리하지 않음
+                }).create();
+        return dialog;
+    }  //AlertDialog3 원형
 
     public double Change_Coordinate(String Data)
     {
