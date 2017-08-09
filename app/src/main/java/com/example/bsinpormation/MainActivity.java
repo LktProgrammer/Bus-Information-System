@@ -62,6 +62,7 @@ import java.util.List;
 import jxl.Sheet;
 import jxl.Workbook;
 
+import static android.content.Intent.ACTION_EDIT;
 import static android.content.Intent.ACTION_VIEW; //import 클래스
 
 
@@ -182,14 +183,9 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                     Page_Button3.setBackgroundColor(Color.WHITE);
                     MyPage3.setVisibility(View.VISIBLE);
                     mapview.setVisibility(View.VISIBLE);
-
-                    if(Map_Flag)                                    //Page 전환 버튼 클릭 시 마다 addview 되는걸 방지
-                    {
-                        contatiner = (ViewGroup) findViewById(R.id.page3);
-                        contatiner.addView(mapview);
-                        mapview.setDaumMapApiKey("163353b3d648115a323c09dd8b9530d3");
-                        Map_Flag=false;
-                    }
+                    contatiner = (ViewGroup) findViewById(R.id.page3);
+                    mapview.setDaumMapApiKey("163353b3d648115a323c09dd8b9530d3");
+                    Toast.makeText(getApplicationContext(),"위차 정보를 읽어옵니다. 잠시만 기다려주세요",Toast.LENGTH_LONG).show();
 
                     int getCheck = ContextCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.ACCESS_COARSE_LOCATION);
 
@@ -269,6 +265,8 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
 
                                 mapview.addPOIItem(marker2);                                   //Marker MapView에 추가
                             }
+                            contatiner.addView(mapview);
+
                         }
                     }
                 }catch(Exception e){}
@@ -405,7 +403,6 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                         listview.setAdapter(line_adapter);
                         listview.setOnItemClickListener(ListView_Listener);
                     }
-
                 } catch (Exception e) {
                 }
             }
@@ -440,13 +437,13 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                 try{
                     my_parser.Parsing_Xml();
                     StationID = (ArrayList<String>)my_parser.Get_InfoList();
+
                     //엑티비티 전환
-
+                    Intent intent = new Intent(getApplicationContext(),View_Station.class);
+                    intent.putExtra("Arsno",StationID.get(0));
+                    startActivityForResult(intent,0);
                 }catch(Exception e){}
-
             }
-
-
             progressBar.setVisibility(View.GONE);
         }
 
