@@ -65,19 +65,16 @@ import jxl.Workbook;
 import static android.content.Intent.ACTION_VIEW; //import 클래스
 
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity implements MapView.POIItemEventListener{
 
-    View MyPage1, MyPage2, MyPage3,MyPage4,MyPage5;       // frameLayout에 적용되지 view
-    EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
-    TextView textview;
-    Button renewal;
-    Button Page_Button1,Page_Button2,Page_Button3;
+    private View MyPage1, MyPage2, MyPage3,MyPage4,MyPage5;       // frameLayout에 적용되지 view
+    private EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
+    private TextView textview;
+    private Button renewal,Page_Button1,Page_Button2,Page_Button3;;
 
     String Service_Key = "ZoZXyocp1pZ6ikv7VCNZlKvVFDCjUVWM%2BiwgZ2AHblNEJX6Qr%2FblSS43%2BzhhmM0%2Fapmwo0SAbYc4MkgYRqNrVA%3D%3D";    //openApi 요청을 위한 servicekey
     String Result_Xml = "";                // 응답 결과 저장
-    String Selected_Station_Name;
-    String Selected_Bus_Number;
-    String Selected_Line_ID;
+    String Selected_Station_Name,Selected_Bus_Number,Selected_Line_ID;
     String[] Result = new String[10];
     int count = 0;
     double Current_lat,Current_lng;
@@ -143,7 +140,6 @@ public class MainActivity extends AppCompatActivity{
 
         Input_Key = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
         location_Manager=(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-
         mapview = new MapView(this);
         View_BusInfo();
     }
@@ -161,15 +157,15 @@ public class MainActivity extends AppCompatActivity{
                     Page_Button1.setBackgroundColor(Color.WHITE);
                     Page_Button2.setBackgroundColor(Color.GRAY);
                     Page_Button3.setBackgroundColor(Color.GRAY);
-                    mapview.setVisibility(View.VISIBLE);
+                    mapview.setVisibility(View.INVISIBLE);
                     if(flag)
                     {
                         MyPage1.setVisibility(View.VISIBLE);
-                        mapview.setVisibility(View.VISIBLE);
+                        mapview.setVisibility(View.INVISIBLE);
                     }
                     else{
                         MyPage4.setVisibility(View.VISIBLE);
-                        mapview.setVisibility(View.VISIBLE);
+                        mapview.setVisibility(View.INVISIBLE);
                     }
                     break;
                 case R.id.button2:
@@ -186,7 +182,7 @@ public class MainActivity extends AppCompatActivity{
                     MyPage3.setVisibility(View.VISIBLE);
                     mapview.setVisibility(View.VISIBLE);
 
-                    if(Map_Flag)
+                    if(Map_Flag)                                    //Page 전환 버튼 클릭 시 마다 addview 되는걸 방지
                     {
                         contatiner = (ViewGroup) findViewById(R.id.page3);
                         contatiner.addView(mapview);
@@ -196,7 +192,7 @@ public class MainActivity extends AppCompatActivity{
 
                     int getCheck = ContextCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.ACCESS_COARSE_LOCATION);
 
-                    if(getCheck == PackageManager.PERMISSION_DENIED)
+                    if(getCheck == PackageManager.PERMISSION_DENIED)            //사용자의 권한 사용 여부를 체크
                     {
                         if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.M) {
                             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1000);
@@ -245,10 +241,10 @@ public class MainActivity extends AppCompatActivity{
                         Current_lat, Current_lng), true);
                 Workbook workbook = null;
                 Sheet sheet = null;
-
                 try{
                     InputStream is = getBaseContext().getResources().getAssets().open("StationInfo.xls");
                     workbook=Workbook.getWorkbook(is);
+
                     if(workbook !=null)
                     {
                         sheet = workbook.getSheet(0);
@@ -260,22 +256,24 @@ public class MainActivity extends AppCompatActivity{
                             int nColumnStartIndex = 0;
                             int nColumnEndIndex = sheet.getRow(2).length -1;
                             int index=0;
-                            for(int nRow = nRowStartIndex+1;nRow<=nRowEndIndex;nRow++)
+                            for(int nRow = nRowStartIndex+1;nRow<=nRowEndIndex;nRow++)          //셀의 내용을 읽어옴
                             {
-                                String ss= sheet.getCell(nColumnStartIndex,nRow).getContents();
-                                if(ss.equals("")){break;}
-                                MapPOIItem marker2 = new MapPOIItem();
-                                marker2.setTag(Integer.valueOf(ss));
+                                String Arsno= sheet.getCell(nColumnStartIndex,nRow).getContents();
+                                if(Arsno.equals("")){break;}
+                                MapPOIItem marker2 = new MapPOIItem();                          //Marker 생성
+                                marker2.setTag(Integer.valueOf(Arsno));                         //Marker의 Tag를 정류소번호로 설정
                                 marker2.setItemName(sheet.getCell(nColumnStartIndex+1,nRow).getContents());
                                 marker2.setMapPoint(MapPoint.mapPointWithGeoCoord(Change_Coordinate(sheet.getCell(nColumnStartIndex+2,nRow).getContents()),Change_Coordinate(sheet.getCell(nColumnStartIndex+3,nRow).getContents())));
                                 marker2.setMarkerType(MapPOIItem.MarkerType.BluePin);
-                                marker2.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
-                                mapview.addPOIItem(marker2);
+
+                                mapview.addPOIItem(marker2);                                   //Marker MapView에 추가
                             }
                         }
                     }
-                }catch(Exception e){}
+                }catch(Exception e){Log.d("터짐",e.getMessage());}
+                mapview.setPOIItemEventListener(MainActivity.this);
                 Map_Flag2=false;
+
             }
         }
         public void onStatusChanged(String provider,int status,Bundle exteas){}
@@ -329,6 +327,18 @@ public class MainActivity extends AppCompatActivity{
             dialog.show();
         }
     };  //Listview의 OnItemClickListener
+
+    @Override
+    public void onPOIItemSelected(MapView mapView, MapPOIItem mapPOIItem) {
+
+    }
+    @Override
+    public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem){}
+    @Override
+    public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem, MapPOIItem.CalloutBalloonButtonType calloutBalloonButtonType) {}
+    @Override
+    public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {}
+
     public class NetworkTask extends AsyncTask<String, ProgressBar, String> {
         private String url;
         private ContentValues values;
@@ -459,6 +469,9 @@ public class MainActivity extends AppCompatActivity{
                 Request_Url = "http://data.busan.go.kr/openBus/service/busanBIMS2/"
                         + Request_URL + "?" + "bstopid=" + Request_Param + "&serviceKey=" + Service_Key;
                 break;
+            case 3:
+                Request_Url = "http://data.busan.go.kr/openBus/service/busanBIMS2/"
+                        +Request_URL + "?" + "arsno=" + "&serviceKey=" + Service_Key;
 
         }
         return Request_Url;
