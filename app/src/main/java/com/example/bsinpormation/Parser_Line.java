@@ -32,7 +32,8 @@ public class Parser_Line implements Parser_Inter {
                  boolean_BusStation_Name=false,
                  boolean_Bus_Exist=false,
                  boolean_BusStation_Num=false,
-                 boolean_Bus_Number = false;
+                 boolean_Bus_Number = false,
+                 boolean_Bus_Rpoint = false;
 
         XmlPullParserFactory factory = XmlPullParserFactory.newInstance().newInstance();
         XmlPullParser parser = factory.newPullParser();
@@ -64,6 +65,8 @@ public class Parser_Line implements Parser_Inter {
                         boolean_BusStation_Num = true;
                     } else if(Tag.equals("lineNo")){
                         boolean_Bus_Number=true;
+                    } else if(Tag.equals("rpoint")){
+                        boolean_Bus_Rpoint=true;
                     }
 
                     break;
@@ -93,6 +96,9 @@ public class Parser_Line implements Parser_Inter {
                     } else if(boolean_Bus_Number) {
                         busline_info.Set_Bus_Number(parser.getText());
                         boolean_Bus_Number=false;
+                    } else if(boolean_Bus_Rpoint){
+                        busline_info.Set_Bus_Rpoint(parser.getText());
+                        boolean_Bus_Number = false;
                     }
                     break;
             }

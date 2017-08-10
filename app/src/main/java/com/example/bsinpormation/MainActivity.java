@@ -68,10 +68,10 @@ import static android.content.Intent.ACTION_VIEW; //import 클래스
 
 public class MainActivity extends AppCompatActivity implements MapView.POIItemEventListener{
 
-    private View MyPage1, MyPage2, MyPage3,MyPage4,MyPage5;       // frameLayout에 적용되지 view
+    private View MyPage1, MyPage2, MyPage3,MyPage4,MyPage5,MyPage6;       // frameLayout에 적용되지 view
     private EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
     private TextView textview;
-    private Button renewal,Page_Button1,Page_Button2,Page_Button3;;
+    private Button renewal,Page_Button1,Page_Button2,Page_Button3,Page_Button4,Page_Button5;
 
     String Service_Key = "ZoZXyocp1pZ6ikv7VCNZlKvVFDCjUVWM%2BiwgZ2AHblNEJX6Qr%2FblSS43%2BzhhmM0%2Fapmwo0SAbYc4MkgYRqNrVA%3D%3D";    //openApi 요청을 위한 servicekey
     String Result_Xml = "";                // 응답 결과 저장
@@ -84,15 +84,18 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
     boolean flag;
     boolean Map_Flag=true;
     boolean Map_Flag2=true;
+    boolean Circulating_Bus = true;
 
     ArrayList<BusLine_Info> busline_info_list = new ArrayList<BusLine_Info>();    // 파싱한 버스 노선 정보를 저장
+    ArrayList<BusLine_Info> busline_info_list_start = new ArrayList<BusLine_Info>();
+    ArrayList<BusLine_Info> busline_info_list_end= new ArrayList<BusLine_Info>();
     ArrayList<BusStation_Info> busstation_info_list = new ArrayList<BusStation_Info>();
     ArrayList<BusStation_Location> busstation_location = new ArrayList<>();
     ArrayList<String> StationID = new ArrayList<String>();
 
-    ListView listview;
-    ListView listview2;
+    ListView listview,listview2,listview3,listview4;
     List_BusLine_Adapter line_adapter;
+    List_BusLine_Adapter line_adapter_end;
     List_BusStation_Adapter busstation_adpter;
 
     DataBaseHelper dbHelper;
@@ -111,12 +114,17 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
         setContentView(R.layout.activity_main1);
         dbHelper = new DataBaseHelper(getApplicationContext(),"BusInfo",null,1);
 
-        listview = (ListView) findViewById(R.id.listview1);
+
         listview2 = (ListView) findViewById(R.id.listview2);
+        listview3 = (ListView) findViewById(R.id.listview3);
+        listview4 = (ListView) findViewById(R.id.listview4);
+
         MyPage1 = findViewById(R.id.page1);
         MyPage2 = findViewById(R.id.page2);
         MyPage3 = findViewById(R.id.page3);
         MyPage4 = findViewById(R.id.page4);
+        MyPage5 = findViewById(R.id.page5);
+        MyPage6 = findViewById(R.id.page6);
 
         BusNum_Input = (EditText) findViewById(R.id.editText);
 
@@ -126,10 +134,15 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
         Page_Button1 = (Button)findViewById(R.id.button1);
         Page_Button2 = (Button)findViewById(R.id.button2);
         Page_Button3 = (Button)findViewById(R.id.button3);
+        Page_Button4 = (Button)findViewById(R.id.btn1);
+        Page_Button5 = (Button)findViewById(R.id.btn2);
 
         Page_Button1.setBackgroundColor(Color.WHITE);
         Page_Button2.setBackgroundColor(Color.GRAY);
         Page_Button3.setBackgroundColor(Color.GRAY);
+        Page_Button4.setBackgroundColor(Color.GRAY);
+        Page_Button5.setBackgroundColor(Color.GRAY);
+
 
         renewal.setVisibility(View.INVISIBLE);
 
@@ -139,6 +152,8 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
         findViewById(R.id.button3).setOnClickListener(mClickListener);
         findViewById(R.id.button4).setOnClickListener(mClickListener);
         findViewById(R.id.button5).setOnClickListener(mClickListener);
+        findViewById(R.id.btn1).setOnClickListener(mClickListener);
+        findViewById(R.id.btn2).setOnClickListener(mClickListener);
 
         Input_Key = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
         location_Manager=(LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
@@ -153,6 +168,8 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
             MyPage2.setVisibility(View.INVISIBLE);
             MyPage3.setVisibility(View.INVISIBLE);
             MyPage4.setVisibility(View.INVISIBLE);
+            MyPage5.setVisibility(View.INVISIBLE);
+            MyPage6.setVisibility(View.INVISIBLE);
 
             switch (v.getId()) {
                 case R.id.button1:
@@ -176,6 +193,8 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                     Page_Button2.setBackgroundColor(Color.WHITE);
                     Page_Button3.setBackgroundColor(Color.GRAY);
                     MyPage2.setVisibility(View.VISIBLE);
+                    MyPage5.setVisibility(View.VISIBLE);
+                    MyPage6.setVisibility(View.VISIBLE);
                     break;
                 case R.id.button3:
                     Page_Button1.setBackgroundColor(Color.GRAY);
@@ -183,10 +202,14 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                     Page_Button3.setBackgroundColor(Color.WHITE);
                     MyPage3.setVisibility(View.VISIBLE);
                     mapview.setVisibility(View.VISIBLE);
-                    contatiner = (ViewGroup) findViewById(R.id.page3);
-                    mapview.setDaumMapApiKey("163353b3d648115a323c09dd8b9530d3");
-                    Toast.makeText(getApplicationContext(),"위차 정보를 읽어옵니다. 잠시만 기다려주세요",Toast.LENGTH_LONG).show();
-
+                    if(Map_Flag)
+                    {
+                        contatiner = (ViewGroup) findViewById(R.id.page3);
+                        mapview.setDaumMapApiKey("163353b3d648115a323c09dd8b9530d3");
+                        contatiner.addView(mapview);
+                        Toast.makeText(getApplicationContext(),"위차 정보를 읽어옵니다. 잠시만 기다려주세요",Toast.LENGTH_LONG).show();
+                        Map_Flag=false;
+                    }
                     int getCheck = ContextCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.ACCESS_COARSE_LOCATION);
 
                     if(getCheck == PackageManager.PERMISSION_DENIED)            //사용자의 권한 사용 여부를 체크
@@ -199,6 +222,8 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                     break;
                 case R.id.button4:
                     MyPage2.setVisibility(View.VISIBLE);
+                    MyPage5.setVisibility(View.VISIBLE);
+                    MyPage6.setVisibility(View.VISIBLE);
                     busline_info_list = null;
                     String Result_Url = "";
                     String Bus_Num = "";
@@ -217,13 +242,39 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                         networkTask = new NetworkTask(0,0,Result_Url,null);
                         networkTask.execute();
                     }
-
                     break;
-
                 case R.id.button5:
                     View_BusInfo();
                     break;
+                case R.id.btn1:
+                    mapview.setVisibility(View.INVISIBLE);
+                    Page_Button1.setBackgroundColor(Color.GRAY);
+                    Page_Button2.setBackgroundColor(Color.WHITE);
+                    Page_Button3.setBackgroundColor(Color.GRAY);
+                    Page_Button4.setBackgroundColor(Color.WHITE);
+                    Page_Button5.setBackgroundColor(Color.GRAY);
+                    MyPage2.setVisibility(View.VISIBLE);
+                    MyPage5.setVisibility(View.VISIBLE);
+                    MyPage6.setVisibility(View.INVISIBLE);
+                    listview3.setVisibility(View.VISIBLE);
+                    listview4.setVisibility(View.INVISIBLE);
+                    break;
+                case R.id.btn2:
+                    mapview.setVisibility(View.INVISIBLE);
+                    Page_Button1.setBackgroundColor(Color.GRAY);
+                    Page_Button2.setBackgroundColor(Color.WHITE);
+                    Page_Button3.setBackgroundColor(Color.GRAY);
+                    Page_Button4.setBackgroundColor(Color.GRAY);
+                    Page_Button5.setBackgroundColor(Color.WHITE);
+                    MyPage2.setVisibility(View.VISIBLE);
+                    MyPage5.setVisibility(View.INVISIBLE);
+                    MyPage6.setVisibility(View.VISIBLE);
+                    listview3.setVisibility(View.INVISIBLE);
+                    listview4.setVisibility(View.VISIBLE);
+                    break;
+
                     }
+
             }
     };
 
@@ -265,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
 
                                 mapview.addPOIItem(marker2);                                   //Marker MapView에 추가
                             }
-                            contatiner.addView(mapview);
+
 
                         }
                     }
@@ -396,12 +447,39 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                 try {
                     my_parser.Parsing_Xml();                      //데이터 파싱
                     busline_info_list = (ArrayList<BusLine_Info>) my_parser.Get_InfoList();    //파싱 결과인 ArrayList를 가져옴
-                    if (busline_info_list.size() == 0) {
+                    if (busline_info_list.size() == 0)
+                    {
                         Toast.makeText(getApplicationContext(), "검색 결과가 없습니다. 번호를 확인해주세요", Toast.LENGTH_SHORT).show();
-                    } else {
-                        line_adapter = new List_BusLine_Adapter(getApplicationContext(), R.layout.linsview_line, busline_info_list);
-                        listview.setAdapter(line_adapter);
-                        listview.setOnItemClickListener(ListView_Listener);
+                    }
+                    else
+                    {
+                        listview3.setVisibility(View.VISIBLE);
+                        listview4.setVisibility(View.INVISIBLE);
+                        Page_Button4.setBackgroundColor(Color.WHITE);
+                        Page_Button5.setBackgroundColor(Color.GRAY);
+                        for(int i=0;i<busline_info_list.size();i++)                             //버스 방향에 따라 ArrayList를 나눔
+                        {
+                            if(Circulating_Bus)
+                            {
+                                busline_info_list_start.add(busline_info_list.get(i));
+                                if(busline_info_list.get(i).Get_Bus_Rpoint().equals("1"))
+                                {
+                                    Circulating_Bus = false;
+                                }
+
+                            }
+                            else
+                            {
+                                busline_info_list_end.add(busline_info_list.get(i));
+                            }
+                        }
+                        line_adapter = new List_BusLine_Adapter(getApplicationContext(), R.layout.linsview_line, busline_info_list_start);
+                        listview3.setAdapter(line_adapter);
+                        listview3.setOnItemClickListener(ListView_Listener);
+
+                        line_adapter_end = new List_BusLine_Adapter(getApplicationContext(), R.layout.linsview_line, busline_info_list_end);
+                        listview4.setAdapter(line_adapter_end);
+                        listview4.setOnItemClickListener(ListView_Listener);
                     }
                 } catch (Exception e) {
                 }
@@ -503,12 +581,13 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                             public void onClick(DialogInterface dialog, int which)                      //사용자가 예를 클릭 할 경우 db에 insert
                             {
                                 dbHelper.insert(Selected_Station_Name,Selected_Bus_Number,Selected_Line_ID);
-                                View_BusInfo();
                                 MyPage2.setVisibility(View.INVISIBLE);
                                 MyPage1.setVisibility(View.VISIBLE);
                                 Page_Button1.setBackgroundColor(Color.WHITE);
                                 Page_Button2.setBackgroundColor(Color.GRAY);
                                 Page_Button3.setBackgroundColor(Color.GRAY);
+                                View_BusInfo();
+
                             }
                         })
                 .setNeutralButton("아니오",new DialogInterface.OnClickListener(){
