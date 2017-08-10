@@ -468,7 +468,6 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                                     Circulating_Bus = false;
                                     Page_Button4.setText(busline_info_list.get(i).Get_BusStation_Name() + "방향");
                                 }
-
                             }
                             else
                             {
