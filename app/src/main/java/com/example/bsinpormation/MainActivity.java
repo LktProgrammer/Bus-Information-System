@@ -457,6 +457,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                         listview4.setVisibility(View.INVISIBLE);
                         Page_Button4.setBackgroundColor(Color.WHITE);
                         Page_Button5.setBackgroundColor(Color.GRAY);
+                        Page_Button5.setText(busline_info_list.get(0).Get_BusStation_Name() + "방향");
                         for(int i=0;i<busline_info_list.size();i++)                             //버스 방향에 따라 ArrayList를 나눔
                         {
                             if(Circulating_Bus)
@@ -465,6 +466,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                                 if(busline_info_list.get(i).Get_Bus_Rpoint().equals("1"))
                                 {
                                     Circulating_Bus = false;
+                                    Page_Button4.setText(busline_info_list.get(i).Get_BusStation_Name() + "방향");
                                 }
 
                             }
