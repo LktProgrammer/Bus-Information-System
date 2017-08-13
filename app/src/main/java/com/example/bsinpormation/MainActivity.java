@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
     String Result_Xml = "";                // 응답 결과 저장
     String Selected_Station_Name,Selected_Bus_Number,Selected_Line_ID,BusStationId,Arsno;
     String[] Result = new String[10];
-    int count = 0;
+    int count= 0;
     double Current_lat,Current_lng;
     NetworkTask networkTask;             // 비동기 처리
 
@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                     Page_Button4.setBackgroundColor(Color.GRAY);
                     Page_Button5.setBackgroundColor(Color.WHITE);
                     MyPage2.setVisibility(View.VISIBLE);
-                    MyPage5.setVisibility(View.INVISIBLE);
+                    MyPage5.setVisibility(View.GONE);
                     MyPage6.setVisibility(View.VISIBLE);
                     listview3.setVisibility(View.INVISIBLE);
                     listview4.setVisibility(View.VISIBLE);
@@ -359,11 +359,23 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
 
-            Selected_Station_Name= busline_info_list.get(position).Get_BusStation_Name();
-            Selected_Bus_Number = busline_info_list.get(position).Get_Bus_Number();
-            Selected_Line_ID =busline_info_list.get(position).Get_Node_Id();
+            Selected_Station_Name= busline_info_list_start.get(position).Get_BusStation_Name();
+            Selected_Bus_Number = busline_info_list_start.get(position).Get_Bus_Number();
+            Selected_Line_ID =busline_info_list_start.get(position).Get_Node_Id();
 
             AlertDialog dialog  = Get_Dialog(position);
+            dialog.show();
+        }
+    };
+    AdapterView.OnItemClickListener ListView_Listener3 = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+
+            Selected_Station_Name= busline_info_list_end.get(position).Get_BusStation_Name();
+            Selected_Bus_Number = busline_info_list_end.get(position).Get_Bus_Number();
+            Selected_Line_ID =busline_info_list_end.get(position).Get_Node_Id();
+
+            AlertDialog dialog  = Get_Dialog1_1(position);
             dialog.show();
         }
     };
@@ -480,7 +492,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
 
                         line_adapter_end = new List_BusLine_Adapter(getApplicationContext(), R.layout.linsview_line, busline_info_list_end);
                         listview4.setAdapter(line_adapter_end);
-                        listview4.setOnItemClickListener(ListView_Listener);
+                        listview4.setOnItemClickListener(ListView_Listener3);
                     }
                 } catch (Exception e) {
                 }
@@ -574,9 +586,9 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
     {
         AlertDialog dialog  = new AlertDialog.Builder(this)
                 .setTitle("관심등록하기")
-                .setMessage("나의 관심 정류소로 등록하시겠습니까?\n\n정류소명 : "+busline_info_list.get(position).Get_BusStation_Name() +"\n"
-                        +"버스번호:" +busline_info_list.get(position).Get_Bus_Number() +"\n"
-                        +"노선ID:" + busline_info_list.get(position).Get_Node_Id())
+                .setMessage("나의 관심 정류소로 등록하시겠습니까?\n\n정류소명 : "+busline_info_list_start.get(position).Get_BusStation_Name() +"\n"
+                        +"버스번호:" +busline_info_list_start.get(position).Get_Bus_Number() +"\n"
+                        +"노선ID:" + busline_info_list_start.get(position).Get_Node_Id())
                 .setPositiveButton("예",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which)                      //사용자가 예를 클릭 할 경우 db에 insert
@@ -639,6 +651,32 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                 }).create();
         return dialog;
     }  //AlertDialog3 원형
+    public AlertDialog Get_Dialog1_1(int position)
+    {
+        AlertDialog dialog  = new AlertDialog.Builder(this)
+                .setTitle("관심등록하기")
+                .setMessage("나의 관심 정류소로 등록하시겠습니까?\n\n정류소명 : "+busline_info_list_end.get(position).Get_BusStation_Name() +"\n"
+                        +"버스번호:" +busline_info_list_end.get(position).Get_Bus_Number() +"\n"
+                        +"노선ID:" + busline_info_list_end.get(position).Get_Node_Id())
+                .setPositiveButton("예",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which)                      //사용자가 예를 클릭 할 경우 db에 insert
+                            {
+                                dbHelper.insert(Selected_Station_Name,Selected_Bus_Number,Selected_Line_ID);
+                                MyPage2.setVisibility(View.INVISIBLE);
+                                MyPage1.setVisibility(View.VISIBLE);
+                                Page_Button1.setBackgroundColor(Color.WHITE);
+                                Page_Button2.setBackgroundColor(Color.GRAY);
+                                Page_Button3.setBackgroundColor(Color.GRAY);
+                                View_BusInfo();
+
+                            }
+                        })
+                .setNeutralButton("아니오",new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog,int which){}                             //아니오를 클릭한 경우 아무 처리하지 않음
+                }).create();
+        return dialog;
+    }   //AlertDialog4() 원형
 
     public double Change_Coordinate(String Data)
     {
