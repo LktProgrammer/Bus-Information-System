@@ -335,7 +335,14 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                             startActivity(intent);
                         };
                     })
-                    .setNegativeButton("취소",null).show();
+                    .setNegativeButton("취소",new DialogInterface.OnClickListener()
+                            {
+                                public void onClick(DialogInterface dialog,int which)
+                                {
+                                    Toast.makeText(getApplicationContext(),"GPS 설정 하지않으면 위치 정보를 읽어 올수 없습니다.",Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                    ).show();
         }
     }; //LocationListener 원형
 
