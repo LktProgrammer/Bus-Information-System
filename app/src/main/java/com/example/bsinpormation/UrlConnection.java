@@ -28,16 +28,17 @@ public class UrlConnection extends Thread   //비동기 처리를 위한 URL Con
         String Result_xml="";
         try {
             URL Url = new URL(Request_url);
-            HttpURLConnection conn = (HttpURLConnection) Url.openConnection();
-
+            HttpURLConnection conn = (HttpURLConnection) Url.openConnection();  //Request URL에 맞는 HttpURPConnection 객체
             conn.setRequestMethod("GET");
             conn.setDoInput(true);
             conn.setUseCaches(false);
             conn.setDefaultUseCaches(false);
             conn.connect();
+
             StringBuilder builder = new StringBuilder();
             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
             String line;
+
             while ((line = reader.readLine()) != null)     //XML 내용 읽어옴
             {
                 builder.append(line + "\n");

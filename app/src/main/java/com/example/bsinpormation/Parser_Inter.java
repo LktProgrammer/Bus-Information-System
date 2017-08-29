@@ -15,3 +15,4 @@ public interface Parser_Inter {
     public void Parsing_Xml() throws XmlPullParserException;
     public ArrayList<?> Get_InfoList();
 }
+

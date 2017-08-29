@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TableRow;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class View_Station extends AppCompatActivity {
     private List_BusStation_Adapter adapter;
     private ListView listview;
     private ProgressBar progressBar;
+    private TableRow table;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,6 +33,8 @@ public class View_Station extends AppCompatActivity {
 
         listview=(ListView)findViewById(R.id.listview3);
         progressBar = (ProgressBar)findViewById(R.id.progressBar);
+        DataBaseHelper dbHelper = new DataBaseHelper(getApplicationContext(),"BusInfo",null,1);
+
 
         Intent intent = getIntent();
         String Arsno = intent.getStringExtra("Arsno");

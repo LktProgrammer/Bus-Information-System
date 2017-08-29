@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -70,7 +71,6 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
 
     private View MyPage1, MyPage2, MyPage3,MyPage4,MyPage5,MyPage6;       // frameLayout에 적용되지 view
     private EditText BusNum_Input;               // 버스 노선 검색을 위한 사용자 입력창
-    private TextView textview;
     private Button renewal,Page_Button1,Page_Button2,Page_Button3,Page_Button4,Page_Button5;
 
     String Service_Key = "ZoZXyocp1pZ6ikv7VCNZlKvVFDCjUVWM%2BiwgZ2AHblNEJX6Qr%2FblSS43%2BzhhmM0%2Fapmwo0SAbYc4MkgYRqNrVA%3D%3D";    //openApi 요청을 위한 servicekey
@@ -207,7 +207,6 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                         contatiner = (ViewGroup) findViewById(R.id.page3);
                         mapview.setDaumMapApiKey("163353b3d648115a323c09dd8b9530d3");
                         contatiner.addView(mapview);
-                        Toast.makeText(getApplicationContext(),"위차 정보를 읽어옵니다. 잠시만 기다려주세요",Toast.LENGTH_LONG).show();
                         Map_Flag=false;
                     }
                     int getCheck = ContextCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.ACCESS_COARSE_LOCATION);
@@ -285,6 +284,7 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
             Current_lng= location.getLongitude();
             if(Map_Flag2)
             {
+                Toast.makeText(getApplicationContext(),"위차 정보를 읽어옵니다. 잠시만 기다려주세요",Toast.LENGTH_LONG).show();
                 mapview.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(
                         Current_lat, Current_lng), true);
                 Workbook workbook = null;
@@ -303,7 +303,6 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
                             int nRowEndIndex = sheet.getColumn(nMaxColum-1).length-1;
                             int nColumnStartIndex = 0;
                             int nColumnEndIndex = sheet.getRow(2).length -1;
-                            int index=0;
                             for(int nRow = nRowStartIndex+1;nRow<=nRowEndIndex;nRow++)          //셀의 내용을 읽어옴
                             {
                                 String Arsno= sheet.getCell(nColumnStartIndex,nRow).getContents();
@@ -316,8 +315,6 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
 
                                 mapview.addPOIItem(marker2);                                   //Marker MapView에 추가
                             }
-
-
                         }
                     }
                 }catch(Exception e){}
@@ -327,8 +324,19 @@ public class MainActivity extends AppCompatActivity implements MapView.POIItemEv
             }
         }
         public void onStatusChanged(String provider,int status,Bundle exteas){}
-        public void onProviderEnabled(String provider){}
-        public void onProviderDisabled(String provider){}
+        public void onProviderEnabled(String provider) {}
+        public void onProviderDisabled(String provider)
+        {
+            new AlertDialog.Builder(MainActivity.this)
+                    .setMessage("GPS가 꺼져있습니다. 사용으로 설정해주세요")
+                    .setPositiveButton("설정", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(intent);
+                        };
+                    })
+                    .setNegativeButton("취소",null).show();
+        }
     }; //LocationListener 원형
 
     public void View_BusInfo()
