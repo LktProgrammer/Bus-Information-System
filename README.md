@@ -15,13 +15,13 @@
 
 #  relative technique
 
-##Strategy Pattern
+## Strategy Pattern
 
 ### 해당 프로젝트에서 API를 받아온 XML 형식의 Data format을 파싱을 할 필요가 있습니다.
 
-##DataBase Programming
+## DataBase Programming
 
-##LBS
+## LBS
 
-##Open Api Application
+## Open Api Application
 
